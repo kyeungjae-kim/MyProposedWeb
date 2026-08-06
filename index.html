@@ -2,18 +2,222 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 모바일 반응형 핵심 뷰포트 설정 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AI 이력서 통합 관리 시스템</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+  
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg-slate: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --sidebar-width: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-slate); color: var(--text-main); min-height: 100vh; }
+
+    /* SPA 레이아웃 구조 */
+    .app-layout { display: flex; min-height: 100vh; width: 100vw; overflow-x: hidden; }
+
+    /* 모바일 전용 헤더 (기본 숨김) */
+    .mobile-header {
+      display: none;
+      background: #1e293b;
+      color: white;
+      padding: 0.85rem 1.25rem;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .mobile-header .brand { font-size: 1.1rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-menu-btn { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
+
+    /* 사이드바 */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.25rem 0.85rem;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .brand { font-size: 1.2rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem; margin-bottom: 1.5rem; }
+    .nav-menu { display: flex; flex-direction: column; gap: 0.4rem; }
+    .nav-item {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .nav-item:hover, .nav-item.active { background: #334155; color: white; }
+    .nav-item.active { background: var(--primary); }
+
+    .user-profile-sm { border-top: 1px solid #334155; padding-top: 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+    .user-name { font-size: 0.85rem; font-weight: 700; }
+    .user-role { font-size: 0.75rem; color: #94a3b8; }
+
+    /* 메인 영역 및 페이지 전환 */
+    .main-content { flex: 1; background: var(--bg-slate); overflow-y: auto; position: relative; width: 100%; }
+    .page-view { display: none; padding: 1.5rem 2rem; }
+    .page-view.active { display: block; }
+
+    #page-resume-register.active { display: flex; flex-direction: column; height: 100%; padding: 0; }
+
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h2 { font-size: 1.35rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    .page-header span { color: var(--text-muted); font-size: 0.88rem; }
+
+    /* 버튼 및 태그 */
+    .btn { padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border: 1px solid var(--border-color); background: white; white-space: nowrap; }
+    .btn-primary { background: var(--primary); color: white; border: none; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-sample { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+
+    .badge { background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .badge-success { background: #d1fae5; color: #065f46; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .status-tag { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+    .status-success { background: #dcfce7; color: #15803d; }
+
+    /* 카드 및 테이블 반응형 공통 */
+    .content-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .stat-card { background: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+    .stat-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; }
+
+    /* 테이블 모바일 스크롤 감싸기 */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .simple-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 600px; }
+    .simple-table th, .simple-table td { padding: 0.75rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .simple-table th { background: #f8fafc; color: var(--text-muted); font-weight: 700; }
+
+    /* 스플릿 뷰 레이아웃 (이력서 등록) */
+    .toolbar { background: white; border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .toolbar-title { font-weight: 800; font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; }
+    .toolbar-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+    .split-container { display: flex; flex: 1; overflow: hidden; }
+    .pane { flex: 1; display: flex; flex-direction: column; background: white; overflow: hidden; }
+    .pane-left { border-right: 2px solid var(--border-color); }
+    .pane-header { background: #f1f5f9; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+    .pane-content { flex: 1; padding: 1.25rem; overflow-y: auto; }
+
+    .doc-preview-paper { background: white; border: 1px solid var(--border-color); padding: 1.25rem; min-height: 100%; font-size: 0.9rem; line-height: 1.6; }
+    .doc-preview-paper h1 { font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.4rem; }
+    .doc-preview-paper table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem 0; }
+    .doc-preview-paper th, .doc-preview-paper td { border: 1px solid #cbd5e1; padding: 0.4rem; font-size: 0.85rem; }
+
+    .section-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    .section-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.4rem; }
+
+    .profile-grid { display: grid; grid-template-columns: 90px 1fr; gap: 1rem; align-items: center; }
+    .profile-photo { width: 90px; height: 110px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color); }
+    .info-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .info-table th { background: #f8fafc; text-align: left; padding: 0.4rem; width: 60px; color: var(--text-muted); }
+    .info-table td { padding: 0.4rem; font-weight: 600; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 500px; }
+    .data-table th, .data-table td { padding: 0.5rem; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .data-table th { background: #f8fafc; color: var(--text-muted); }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .summary-box { background: #f8fafc; padding: 0.75rem; border-radius: 6px; border-left: 3px solid var(--primary); }
+    .summary-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.2rem; }
+    .summary-val { font-size: 0.85rem; font-weight: 600; }
+
+    .tag-cloud { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag { background: #e0e7ff; color: #1d4ed8; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+
+    /* 폼 조작 컨트롤 */
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .input-control { padding: 0.55rem 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.88rem; width: 100%; }
+    .ai-response-box { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; font-size: 0.9rem; line-height: 1.6; white-space: pre-line; }
+
+    /* =========================================================
+       모바일 모바일 반응형 미디어 쿼리 (768px 이하)
+       ========================================================= */
+    @media (max-width: 768px) {
+      .app-layout { flex-direction: column; }
+      
+      .mobile-header { display: flex; }
+
+      .sidebar {
+        display: none;
+        width: 100%;
+        padding: 1rem;
+        background: #1e293b;
+      }
+      .sidebar.active { display: flex; }
+      .sidebar .brand { display: none; } /* 모바일 헤더와 중복 방지 */
+
+      .page-view { padding: 1rem; }
+
+      /* 툴바 상단 고정 수정을 위한 유동화 */
+      .toolbar { flex-direction: column; align-items: stretch; height: auto; padding: 1rem; }
+      .toolbar-actions { width: 100%; flex-direction: column; }
+      .toolbar-actions .btn { width: 100%; }
+
+      /* 스플릿 레이아웃 세로 정렬 */
+      .split-container { flex-direction: column; height: auto; overflow: visible; }
+      .pane { overflow: visible; }
+      .pane-left { border-right: none; border-bottom: 2px solid var(--border-color); }
+      #page-resume-register.active { height: auto; }
+
+      /* 그리드 구조 1열화 */
+      .profile-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .summary-box { grid-column: span 1 !important; }
+
+      /* 폼 및 필터 수직 재배치 */
+      .filter-bar { flex-direction: column; }
+      .filter-bar select { width: 100% !important; }
+      
+      .input-control { width: 100% !important; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- 전체 레이아웃 (사이드바 + 메인 영역) -->
+  <!-- 모바일 전용 상단 헤더 -->
+  <div class="mobile-header">
+    <div class="brand">
+      <i class="fa-solid fa-brain"></i>
+      <span>HR Match AI</span>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="메뉴 열기">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+
   <div class="app-layout">
     
     <!-- 사이드바 내비게이션 -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="appSidebar">
       <div class="brand">
         <i class="fa-solid fa-brain"></i>
         <span>HR Match AI</span>
@@ -62,28 +266,28 @@
             <div class="stat-icon" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-file-lines"></i></div>
             <div class="stat-info">
               <span class="stat-label">전체 등록 이력서</span>
-              <span class="stat-value">1,248 건</span>
+              <div class="stat-value">1,248 건</div>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;"><i class="fa-solid fa-clock-rotate-left"></i></div>
             <div class="stat-info">
               <span class="stat-label">금주 신규 등록</span>
-              <span class="stat-value">+32 건</span>
+              <div class="stat-value">+32 건</div>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background: #faf5ff; color: #9333ea;"><i class="fa-solid fa-bolt"></i></div>
             <div class="stat-info">
               <span class="stat-label">AI 파싱 성공률</span>
-              <span class="stat-value">99.2%</span>
+              <div class="stat-value">99.2%</div>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-user-check"></i></div>
             <div class="stat-info">
               <span class="stat-label">Ollama 추천 매칭건</span>
-              <span class="stat-value">156 건</span>
+              <div class="stat-value">156 건</div>
             </div>
           </div>
         </div>
@@ -91,44 +295,46 @@
         <!-- 최근 등록 인재 데이터 표 -->
         <div class="content-card" style="margin-top: 1.5rem;">
           <div class="card-title"><i class="fa-solid fa-list"></i> 최근 분석 완료된 후보자</div>
-          <table class="simple-table">
-            <thead>
-              <tr>
-                <th>후보자명</th>
-                <th>지원/경력 분야</th>
-                <th>총 경력</th>
-                <th>주요 스펙 키워드</th>
-                <th>등록일</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>홍길동</strong></td>
-                <td>백엔드 개발자</td>
-                <td>7년 2개월</td>
-                <td><span class="badge">#Java</span> <span class="badge">#Spring</span> <span class="badge">#AWS</span></td>
-                <td>2026-08-06</td>
-                <td><span class="status-tag status-success">파싱 완료</span></td>
-              </tr>
-              <tr>
-                <td><strong>김철수</strong></td>
-                <td>서비스 기획 (PO)</td>
-                <td>5년 0개월</td>
-                <td><span class="badge">#Figma</span> <span class="badge">#GA4</span> <span class="badge">#UIUX</span></td>
-                <td>2026-08-05</td>
-                <td><span class="status-tag status-success">파싱 완료</span></td>
-              </tr>
-              <tr>
-                <td><strong>이영희</strong></td>
-                <td>데이터 엔지니어</td>
-                <td>3년 6개월</td>
-                <td><span class="badge">#Python</span> <span class="badge">#Spark</span> <span class="badge">#SQL</span></td>
-                <td>2026-08-04</td>
-                <td><span class="status-tag status-success">파싱 완료</span></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>후보자명</th>
+                  <th>지원/경력 분야</th>
+                  <th>총 경력</th>
+                  <th>주요 스펙 키워드</th>
+                  <th>등록일</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>홍길동</strong></td>
+                  <td>백엔드 개발자</td>
+                  <td>7년 2개월</td>
+                  <td><span class="badge">#Java</span> <span class="badge">#Spring</span> <span class="badge">#AWS</span></td>
+                  <td>2026-08-06</td>
+                  <td><span class="status-tag status-success">파싱 완료</span></td>
+                </tr>
+                <tr>
+                  <td><strong>김철수</strong></td>
+                  <td>서비스 기획 (PO)</td>
+                  <td>5년 0개월</td>
+                  <td><span class="badge">#Figma</span> <span class="badge">#GA4</span> <span class="badge">#UIUX</span></td>
+                  <td>2026-08-05</td>
+                  <td><span class="status-tag status-success">파싱 완료</span></td>
+                </tr>
+                <tr>
+                  <td><strong>이영희</strong></td>
+                  <td>데이터 엔지니어</td>
+                  <td>3년 6개월</td>
+                  <td><span class="badge">#Python</span> <span class="badge">#Spark</span> <span class="badge">#SQL</span></td>
+                  <td>2026-08-04</td>
+                  <td><span class="status-tag status-success">파싱 완료</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -144,10 +350,10 @@
               <input type="file" id="file-input" accept=".doc,.docx,.hwp" hidden>
             </label>
             <button class="btn btn-sample" onclick="loadSample('doc')">
-              <i class="fa-solid fa-file-word"></i> [샘플 1] 홍길동.doc 불러오기
+              <i class="fa-solid fa-file-word"></i> [샘플 1] 홍길동.doc
             </button>
             <button class="btn btn-sample" onclick="loadSample('hwp')">
-              <i class="fa-solid fa-file-lines"></i> [샘플 2] 김철수.hwp 불러오기
+              <i class="fa-solid fa-file-lines"></i> [샘플 2] 김철수.hwp
             </button>
           </div>
         </header>
@@ -186,17 +392,19 @@
               <!-- 경력사항 표 -->
               <div class="section-card">
                 <div class="section-title"><i class="fa-solid fa-briefcase"></i> 경력사항</div>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th style="width:25%">근무기간</th>
-                      <th style="width:25%">회사명</th>
-                      <th style="width:20%">직급/역할</th>
-                      <th style="width:30%">주요 업무</th>
-                    </tr>
-                  </thead>
-                  <tbody id="ai-career-tbody"></tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th style="width:25%">근무기간</th>
+                        <th style="width:25%">회사명</th>
+                        <th style="width:20%">직급/역할</th>
+                        <th style="width:30%">주요 업무</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ai-career-tbody"></tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- 주요 사항 요약 -->
@@ -251,21 +459,23 @@
         </div>
 
         <div class="content-card">
-          <table class="simple-table" id="candidate-list-table">
-            <thead>
-              <tr>
-                <th>성명</th>
-                <th>성별/나이</th>
-                <th>지원분야</th>
-                <th>경력 요약</th>
-                <th>주요 키워드</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- 자바스크립트로 동적 로드 -->
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="simple-table" id="candidate-list-table">
+              <thead>
+                <tr>
+                  <th>성명</th>
+                  <th>성별/나이</th>
+                  <th>지원분야</th>
+                  <th>경력 요약</th>
+                  <th>주요 키워드</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 자바스크립트로 동적 로드 -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -278,15 +488,15 @@
 
         <div class="content-card" style="margin-bottom: 1.5rem;">
           <div class="form-group">
-            <label class="form-label">Ollama 로컬 모델 선택</label>
-            <select id="ollama-model-select" class="input-control" style="width: 250px;">
+            <label class="form-label" style="font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; display:block;">Ollama 로컬 모델 선택</label>
+            <select id="ollama-model-select" class="input-control" style="max-width: 300px;">
               <option value="llama3.2:3b">llama3.2:3b (경량화 - 빠른 추천)</option>
               <option value="mistral:7b">mistral:7b (정밀 매칭)</option>
               <option value="qwen2.5-coder">qwen2.5-coder (개발 직무 특화)</option>
             </select>
           </div>
           <div class="form-group" style="margin-top: 1rem;">
-            <label class="form-label">요구 직무 / 프로젝트 조건 입력</label>
+            <label class="form-label" style="font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; display:block;">요구 직무 / 프로젝트 조건 입력</label>
             <textarea id="ollama-prompt" class="input-control" rows="3" placeholder="예: 대용량 결제 데이터 처리 경험이 있고 Spring Boot와 AWS 활용이 뛰어난 5년 이상 백엔드 개발자를 찾아줘."></textarea>
           </div>
           <button class="btn btn-primary" style="margin-top: 0.8rem;" onclick="runOllamaRecommendation()">
@@ -313,46 +523,246 @@
         </header>
 
         <div class="content-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
             <div class="card-title" style="margin:0;"><i class="fa-solid fa-user-shield"></i> 계정 목록</div>
             <button class="btn btn-primary" onclick="alert('사용자 추가 모달을 호출합니다.')"><i class="fa-solid fa-plus"></i> 새 계정 등록</button>
           </div>
-          <table class="simple-table">
-            <thead>
-              <tr>
-                <th>사용자 ID</th>
-                <th>이름</th>
-                <th>이메일</th>
-                <th>부서 및 역할</th>
-                <th>권한</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>admin01</td>
-                <td>김관리</td>
-                <td>admin@company.com</td>
-                <td>인사팀 / 팀장</td>
-                <td><span class="badge">최고 관리자</span></td>
-                <td><span class="status-tag status-success">활성</span></td>
-              </tr>
-              <tr>
-                <td>hr_user01</td>
-                <td>이채용</td>
-                <td>recruit@company.com</td>
-                <td>인사팀 / 매니저</td>
-                <td><span class="badge">일반 관리자</span></td>
-                <td><span class="status-tag status-success">활성</span></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="simple-table">
+              <thead>
+                <tr>
+                  <th>사용자 ID</th>
+                  <th>이름</th>
+                  <th>이메일</th>
+                  <th>부서 및 역할</th>
+                  <th>권한</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>admin01</td>
+                  <td>김관리</td>
+                  <td>admin@company.com</td>
+                  <td>인사팀 / 팀장</td>
+                  <td><span class="badge">최고 관리자</span></td>
+                  <td><span class="status-tag status-success">활성</span></td>
+                </tr>
+                <tr>
+                  <td>hr_user01</td>
+                  <td>이채용</td>
+                  <td>recruit@company.com</td>
+                  <td>인사팀 / 매니저</td>
+                  <td><span class="badge">일반 관리자</span></td>
+                  <td><span class="status-tag status-success">활성</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
     </main>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // 샘플 후보자 데이터베이스 (상태 관리)
+    const candidateData = [
+      {
+        id: 'doc',
+        fileName: "홍길동_백엔드개발자_이력서.doc",
+        docHtml: `
+          <h1>이 력 서</h1>
+          <h2>1. 기본 정보</h2>
+          <table>
+            <tr><th>성명</th><td>홍길동</td><th>생년월일</th><td>1992.05.14 (34세)</td></tr>
+            <tr><th>성별</th><td>남성</td><th>연락처</th><td>010-1234-5678</td></tr>
+            <tr><th>주소</th><td colspan="3">서울특별시 강남구 테헤란로 123</td></tr>
+          </table>
+          <h2>2. 주요 경력</h2>
+          <p><strong>(주)테크솔루션</strong> (2021.03 ~ 현재) / 차장</p>
+          <p>- Spring Boot 기반 대용량 결제 시스템 API 개발</p>
+          <p>- MSA 전환 프로젝트 주도 및 AWS cloud 구축</p>
+        `,
+        aiData: {
+          photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+          name: "홍길동",
+          age: "34세 (1992년생)",
+          gender: "남성",
+          address: "서울시 강남구 테헤란로 123",
+          careers: [
+            { period: "2021.03 ~ 재직중", company: "(주)테크솔루션", role: "차장 / 백엔드 리드", task: "Spring Boot 결제 API 구축, MSA/AWS 전환" },
+            { period: "2018.01 ~ 2021.02", company: "(주)에이비씨소프트", role: "대리 / 개발자", task: "Java 백엔드 개발 및 DB 성능 튜닝" }
+          ],
+          field: "IT / 백엔드 개발",
+          applyField: "수석 백엔드 아키텍트",
+          careerSummary: "총 7년 경력. Spring Boot 및 AWS 기반 대용량 금융 결제 시스템 구축 경험 보유.",
+          etc: "희망 연봉 7,500만 원, 원격근무 선호",
+          tags: ["#Java", "#SpringBoot", "#MSA", "#AWS", "#백엔드"]
+        }
+      },
+      {
+        id: 'hwp',
+        fileName: "김철수_기획자_이력서.hwp",
+        docHtml: `
+          <h1>이 력 서</h1>
+          <p><b>■ 인적사항</b></p>
+          <ul><li>성 명: 김철수 (여성, 29세)</li><li>주 소: 경기도 성남시 분당구 판교역로 45</li></ul>
+          <h2>■ 경력 사항</h2>
+          <table>
+            <tr><th>기간</th><th>근무처</th><th>직위</th><th>담당업무</th></tr>
+            <tr><td>2022.05~2026.01</td><td>(주)글로벌커머스</td><td>과장</td><td>서비스 기획 및 UX 설계</td></tr>
+          </table>
+        `,
+        aiData: {
+          photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200",
+          name: "김철수",
+          age: "29세 (1997년생)",
+          gender: "여성",
+          address: "경기도 성남시 분당구 판교역로 45",
+          careers: [
+            { period: "2022.05 ~ 2026.01", company: "(주)글로벌커머스", role: "과장 / PO", task: "커머스 UX 설계 및 결제 로직 개선" }
+          ],
+          field: "서비스 기획 / PO",
+          applyField: "이커머스 서비스 총괄 PO",
+          careerSummary: "총 5년 경력. 글로벌 커머스 앱 전환율 35% 향상 주도.",
+          etc: "비즈니스 영어 가능",
+          tags: ["#서비스기획", "#PO", "#Figma", "#GA4", "#UIUX"]
+        }
+      }
+    ];
+
+    // 모바일 메뉴 토글
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('appSidebar');
+      sidebar.classList.toggle('active');
+    }
+
+    // 1. SPA 페이지 라우팅
+    function switchPage(pageId) {
+      document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`page-${pageId}`).classList.add('active');
+      
+      // 내비게이션 버튼 활성화 스타일 적용
+      const activeNavs = document.querySelectorAll(`.nav-item[onclick*="${pageId}"]`);
+      activeNavs.forEach(btn => btn.classList.add('active'));
+
+      if (pageId === 'resume-list') {
+        renderCandidateListTable(candidateData);
+      }
+
+      // 모바일 환경에서 페이지 이동 시 메뉴 자동 닫기
+      if (window.innerWidth <= 768) {
+        document.getElementById('appSidebar').classList.remove('active');
+      }
+    }
+
+    // 2. 이력서 등록 스플릿 뷰 샘플 로딩
+    function loadSample(key) {
+      const item = candidateData.find(c => c.id === key);
+      if (!item) return;
+
+      document.getElementById('current-filename').textContent = item.fileName;
+      document.getElementById('doc-html-view').innerHTML = item.docHtml;
+
+      const ai = item.aiData;
+      document.getElementById('ai-photo').src = ai.photo;
+      document.getElementById('ai-name').textContent = ai.name;
+      document.getElementById('ai-age').textContent = ai.age;
+      document.getElementById('ai-gender').textContent = ai.gender;
+      document.getElementById('ai-address').textContent = ai.address;
+
+      const tbody = document.getElementById('ai-career-tbody');
+      tbody.innerHTML = '';
+      ai.careers.forEach(c => {
+        tbody.innerHTML += `<tr><td><strong>${c.period}</strong></td><td>${c.company}</td><td>${c.role}</td><td>${c.task}</td></tr>`;
+      });
+
+      document.getElementById('ai-field').textContent = ai.field;
+      document.getElementById('ai-apply-field').textContent = ai.applyField;
+      document.getElementById('ai-career-summary').textContent = ai.careerSummary;
+      document.getElementById('ai-etc').textContent = ai.etc;
+
+      const tagCloud = document.getElementById('ai-tags');
+      tagCloud.innerHTML = '';
+      ai.tags.forEach(t => tagCloud.innerHTML += `<span class="tag">${t}</span> `);
+    }
+
+    // 3. 이력서 목록 테이블 렌더링 및 키워드 검색
+    function renderCandidateListTable(data) {
+      const tbody = document.querySelector('#candidate-list-table tbody');
+      tbody.innerHTML = '';
+
+      data.forEach(item => {
+        const ai = item.aiData;
+        const tagsHtml = ai.tags.map(t => `<span class="badge">${t}</span>`).join(' ');
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${ai.name}</strong></td>
+            <td>${ai.gender} / ${ai.age.split(' ')[0]}</td>
+            <td>${ai.applyField}</td>
+            <td>${ai.careerSummary}</td>
+            <td>${tagsHtml}</td>
+            <td>
+              <button class="btn btn-sample" onclick="openCandidateDetail('${item.id}')">스플릿 보기</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function searchCandidates() {
+      const keyword = document.getElementById('candidate-search').value.toLowerCase();
+      const filtered = candidateData.filter(item => {
+        const ai = item.aiData;
+        return ai.name.toLowerCase().includes(keyword) || 
+               ai.field.toLowerCase().includes(keyword) || 
+               ai.tags.some(t => t.toLowerCase().includes(keyword));
+      });
+      renderCandidateListTable(filtered);
+    }
+
+    function openCandidateDetail(id) {
+      switchPage('resume-register');
+      loadSample(id);
+    }
+
+    // 4. Ollama AI 추천 기능 시뮬레이션
+    function runOllamaRecommendation() {
+      const model = document.getElementById('ollama-model-select').value;
+      const prompt = document.getElementById('ollama-prompt').value;
+      const resultArea = document.getElementById('ollama-result-area');
+      const responseBox = document.getElementById('ollama-response-text');
+
+      if (!prompt.trim()) {
+        alert('요구 직무 조건 또는 프로젝트 내용을 입력해주세요.');
+        return;
+      }
+
+      resultArea.style.display = 'block';
+      responseBox.textContent = `[${model}] 모델이 DB 내 후보자 매칭 분석 중입니다...`;
+
+      setTimeout(() => {
+        responseBox.textContent = `🤖 [Ollama ${model} 인재 매칭 리포트]
+
+🎯 최적 매칭 후보자: 홍길동 (적합도: 96%)
+
+📌 AI 매칭 사유:
+1. 입력하신 요구사항('Spring Boot', 'AWS', '백엔드')과 홍길동 후보자의 스펙 태그가 100% 일치합니다.
+2. (주)테크솔루션에서 대용량 결제 API 구축 및 MSA 전환을 성공적으로 주도한 7년 경력이 요구 프로젝트 조건에 최적화되어 있습니다.
+
+💡 면접 추천 질문:
+- MSA 아키텍처 전환 과정에서 발생한 트래픽 병목 현상 해결 경험
+- AWS 환경에서의 결제 데이터 정합성 보장 전략`;
+      }, 1200);
+    }
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSample('doc');
+    });
+  </script>
 </body>
 </html>
