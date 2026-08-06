@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 이력서 통합 관리 시스템</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 전체 레이아웃 (사이드바 + 메인 영역) -->
+  <div class="app-layout">
+    
+    <!-- 사이드바 내비게이션 -->
+    <aside class="sidebar">
+      <div class="brand">
+        <i class="fa-solid fa-brain"></i>
+        <span>HR Match AI</span>
+      </div>
+      
+      <nav class="nav-menu">
+        <button class="nav-item active" onclick="switchPage('dashboard')">
+          <i class="fa-solid fa-chart-pie"></i> 대시보드
+        </button>
+        <button class="nav-item" onclick="switchPage('resume-register')">
+          <i class="fa-solid fa-file-arrow-up"></i> 이력서 등록 (분석)
+        </button>
+        <button class="nav-item" onclick="switchPage('resume-list')">
+          <i class="fa-solid fa-address-book"></i> 이력서 목록
+        </button>
+        <button class="nav-item" onclick="switchPage('ollama-rec')">
+          <i class="fa-solid fa-robot"></i> Ollama AI 추천
+        </button>
+        <button class="nav-item" onclick="switchPage('user-mgnt')">
+          <i class="fa-solid fa-users-gear"></i> 사용자 관리
+        </button>
+      </nav>
+
+      <div class="user-profile-sm">
+        <i class="fa-solid fa-circle-user fa-2x"></i>
+        <div>
+          <div class="user-name">관리자 (HR Admin)</div>
+          <div class="user-role">admin@company.com</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="main-content">
+      
+      <!-- 1. 대시보드 페이지 -->
+      <section id="page-dashboard" class="page-view active">
+        <header class="page-header">
+          <h2><i class="fa-solid fa-chart-pie"></i> 대시보드</h2>
+          <span>인재 채용 현황 및 AI 분석 지표를 한눈에 확인합니다.</span>
+        </header>
+
+        <!-- 핵심 요약 지표 카드 -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">전체 등록 이력서</span>
+              <span class="stat-value">1,248 건</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">금주 신규 등록</span>
+              <span class="stat-value">+32 건</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #faf5ff; color: #9333ea;"><i class="fa-solid fa-bolt"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">AI 파싱 성공률</span>
+              <span class="stat-value">99.2%</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-user-check"></i></div>
+            <div class="stat-info">
+              <span class="stat-label">Ollama 추천 매칭건</span>
+              <span class="stat-value">156 건</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 최근 등록 인재 데이터 표 -->
+        <div class="content-card" style="margin-top: 1.5rem;">
+          <div class="card-title"><i class="fa-solid fa-list"></i> 최근 분석 완료된 후보자</div>
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>후보자명</th>
+                <th>지원/경력 분야</th>
+                <th>총 경력</th>
+                <th>주요 스펙 키워드</th>
+                <th>등록일</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>홍길동</strong></td>
+                <td>백엔드 개발자</td>
+                <td>7년 2개월</td>
+                <td><span class="badge">#Java</span> <span class="badge">#Spring</span> <span class="badge">#AWS</span></td>
+                <td>2026-08-06</td>
+                <td><span class="status-tag status-success">파싱 완료</span></td>
+              </tr>
+              <tr>
+                <td><strong>김철수</strong></td>
+                <td>서비스 기획 (PO)</td>
+                <td>5년 0개월</td>
+                <td><span class="badge">#Figma</span> <span class="badge">#GA4</span> <span class="badge">#UIUX</span></td>
+                <td>2026-08-05</td>
+                <td><span class="status-tag status-success">파싱 완료</span></td>
+              </tr>
+              <tr>
+                <td><strong>이영희</strong></td>
+                <td>데이터 엔지니어</td>
+                <td>3년 6개월</td>
+                <td><span class="badge">#Python</span> <span class="badge">#Spark</span> <span class="badge">#SQL</span></td>
+                <td>2026-08-04</td>
+                <td><span class="status-tag status-success">파싱 완료</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 2. 이력서 등록 페이지 (스플릿 뷰 적용) -->
+      <section id="page-resume-register" class="page-view">
+        <header class="toolbar">
+          <div class="toolbar-title">
+            <i class="fa-solid fa-columns"></i> 이력서 문서 스플릿 분석기
+          </div>
+          <div class="toolbar-actions">
+            <label class="btn btn-primary">
+              <i class="fa-solid fa-file-arrow-up"></i> 파일 불러오기 (.doc, .hwp)
+              <input type="file" id="file-input" accept=".doc,.docx,.hwp" hidden>
+            </label>
+            <button class="btn btn-sample" onclick="loadSample('doc')">
+              <i class="fa-solid fa-file-word"></i> [샘플 1] 홍길동.doc 불러오기
+            </button>
+            <button class="btn btn-sample" onclick="loadSample('hwp')">
+              <i class="fa-solid fa-file-lines"></i> [샘플 2] 김철수.hwp 불러오기
+            </button>
+          </div>
+        </header>
+
+        <div class="split-container">
+          <!-- 좌측: 원본 문서 HTML 미리보기 -->
+          <section class="pane pane-left">
+            <div class="pane-header">
+              <span><i class="fa-regular fa-file-code"></i> 원본 문서 HTML 미리보기</span>
+              <span id="current-filename">홍길동_이력서.doc</span>
+            </div>
+            <div class="pane-content">
+              <div class="doc-preview-paper" id="doc-html-view"></div>
+            </div>
+          </section>
+
+          <!-- 우측: AI 분석 결과 -->
+          <section class="pane pane-right">
+            <div class="pane-header">
+              <span><i class="fa-solid fa-robot"></i> AI 구조화 분석 결과</span>
+              <span class="badge-success">파싱 완료</span>
+            </div>
+            <div class="pane-content">
+              <!-- 인적사항 -->
+              <div class="section-card">
+                <div class="section-title"><i class="fa-solid fa-address-card"></i> 인적사항</div>
+                <div class="profile-grid">
+                  <img id="ai-photo" class="profile-photo" src="" alt="후보자 사진">
+                  <table class="info-table">
+                    <tr><th>성명</th><td id="ai-name">-</td><th>나이</th><td id="ai-age">-</td></tr>
+                    <tr><th>성별</th><td id="ai-gender">-</td><th>주소</th><td id="ai-address">-</td></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 경력사항 표 -->
+              <div class="section-card">
+                <div class="section-title"><i class="fa-solid fa-briefcase"></i> 경력사항</div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width:25%">근무기간</th>
+                      <th style="width:25%">회사명</th>
+                      <th style="width:20%">직급/역할</th>
+                      <th style="width:30%">주요 업무</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ai-career-tbody"></tbody>
+                </table>
+              </div>
+
+              <!-- 주요 사항 요약 -->
+              <div class="section-card">
+                <div class="section-title"><i class="fa-solid fa-list-check"></i> 주요 사항 요약</div>
+                <div class="summary-grid">
+                  <div class="summary-box">
+                    <div class="summary-label">경력분야</div>
+                    <div class="summary-val" id="ai-field">-</div>
+                  </div>
+                  <div class="summary-box">
+                    <div class="summary-label">지원분야</div>
+                    <div class="summary-val" id="ai-apply-field">-</div>
+                  </div>
+                  <div class="summary-box" style="grid-column: span 2;">
+                    <div class="summary-label">경력내용 핵심</div>
+                    <div class="summary-val" id="ai-career-summary">-</div>
+                  </div>
+                  <div class="summary-box" style="grid-column: span 2;">
+                    <div class="summary-label">기타 사항</div>
+                    <div class="summary-val" id="ai-etc">-</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 키워드 분석 -->
+              <div class="section-card">
+                <div class="section-title"><i class="fa-solid fa-tags"></i> 검색용 태그 키워드</div>
+                <div class="tag-cloud" id="ai-tags"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 3. 이력서 목록 페이지 -->
+      <section id="page-resume-list" class="page-view">
+        <header class="page-header">
+          <h2><i class="fa-solid fa-address-book"></i> 이력서 목록 및 인재 검색</h2>
+          <span>등록된 후보자의 텍스트 검색 및 키워드 분석 필터링이 가능합니다.</span>
+        </header>
+
+        <div class="filter-bar">
+          <input type="text" id="candidate-search" class="input-control" placeholder="이름, 직무, 기술 키워드 검색 (예: Java, 백엔드)">
+          <select class="input-control" style="width: 150px;">
+            <option value="">전체 직무</option>
+            <option value="dev">개발</option>
+            <option value="pm">기획 / PM</option>
+            <option value="design">디자인</option>
+          </select>
+          <button class="btn btn-primary" onclick="searchCandidates()"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
+        </div>
+
+        <div class="content-card">
+          <table class="simple-table" id="candidate-list-table">
+            <thead>
+              <tr>
+                <th>성명</th>
+                <th>성별/나이</th>
+                <th>지원분야</th>
+                <th>경력 요약</th>
+                <th>주요 키워드</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 자바스크립트로 동적 로드 -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. Ollama AI 추천 페이지 -->
+      <section id="page-ollama-rec" class="page-view">
+        <header class="page-header">
+          <h2><i class="fa-solid fa-robot"></i> Ollama 로컬 AI 인재 추천</h2>
+          <span>사내 구축된 Ollama LLM을 연동하여 최적의 적합 후보자를 AI가 매칭 및 추천합니다.</span>
+        </header>
+
+        <div class="content-card" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label class="form-label">Ollama 로컬 모델 선택</label>
+            <select id="ollama-model-select" class="input-control" style="width: 250px;">
+              <option value="llama3.2:3b">llama3.2:3b (경량화 - 빠른 추천)</option>
+              <option value="mistral:7b">mistral:7b (정밀 매칭)</option>
+              <option value="qwen2.5-coder">qwen2.5-coder (개발 직무 특화)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">요구 직무 / 프로젝트 조건 입력</label>
+            <textarea id="ollama-prompt" class="input-control" rows="3" placeholder="예: 대용량 결제 데이터 처리 경험이 있고 Spring Boot와 AWS 활용이 뛰어난 5년 이상 백엔드 개발자를 찾아줘."></textarea>
+          </div>
+          <button class="btn btn-primary" style="margin-top: 0.8rem;" onclick="runOllamaRecommendation()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Ollama 추천 실행하기
+          </button>
+        </div>
+
+        <!-- AI 추천 결과 출력 영역 -->
+        <div id="ollama-result-area" class="content-card" style="display: none;">
+          <div class="card-title" style="color: var(--primary);">
+            <i class="fa-solid fa-lightbulb"></i> AI 분석 매칭 리포트
+          </div>
+          <div id="ollama-response-text" class="ai-response-box">
+            <!-- 동적 텍스트 로딩 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 사용자 관리 페이지 -->
+      <section id="page-user-mgnt" class="page-view">
+        <header class="page-header">
+          <h2><i class="fa-solid fa-users-gear"></i> 사용자 관리</h2>
+          <span>시스템 접근 권한 및 HR 담당자 계정을 관리합니다.</span>
+        </header>
+
+        <div class="content-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="card-title" style="margin:0;"><i class="fa-solid fa-user-shield"></i> 계정 목록</div>
+            <button class="btn btn-primary" onclick="alert('사용자 추가 모달을 호출합니다.')"><i class="fa-solid fa-plus"></i> 새 계정 등록</button>
+          </div>
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>사용자 ID</th>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>부서 및 역할</th>
+                <th>권한</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>admin01</td>
+                <td>김관리</td>
+                <td>admin@company.com</td>
+                <td>인사팀 / 팀장</td>
+                <td><span class="badge">최고 관리자</span></td>
+                <td><span class="status-tag status-success">활성</span></td>
+              </tr>
+              <tr>
+                <td>hr_user01</td>
+                <td>이채용</td>
+                <td>recruit@company.com</td>
+                <td>인사팀 / 매니저</td>
+                <td><span class="badge">일반 관리자</span></td>
+                <td><span class="status-tag status-success">활성</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
