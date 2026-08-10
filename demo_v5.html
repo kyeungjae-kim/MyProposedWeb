@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Talent Platform Prototype</title>
+<style>
+:root{
+  --bg:#f5f7fb; --panel:#fff; --line:#e7eaf0; --text:#18212f; --muted:#718096;
+  --primary:#3b5ccc; --primary2:#eef1ff; --success:#16845b; --warning:#c47a12;
+  --danger:#c84b4b; --shadow:0 8px 28px rgba(31,41,55,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Noto Sans KR",Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:238px;background:#111827;color:#fff;padding:22px 14px;position:fixed;inset:0 auto 0 0}
+.logo{font-size:20px;font-weight:800;padding:0 12px 24px}
+.logo span{color:#91a6ff}
+.menu-title{font-size:11px;color:#94a3b8;padding:14px 12px 7px;text-transform:uppercase}
+.nav button{width:100%;border:0;background:transparent;color:#cbd5e1;text-align:left;padding:11px 12px;border-radius:9px;margin:2px 0}
+.nav button:hover,.nav button.active{background:#202a44;color:#fff}
+.nav .icon{display:inline-block;width:23px}
+.sidebar-bottom{position:absolute;bottom:18px;left:18px;right:18px;border-top:1px solid #273244;padding-top:14px;color:#94a3b8;font-size:12px}
+.main{margin-left:238px;width:calc(100% - 238px)}
+.topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:5}
+.breadcrumb{font-size:14px;color:var(--muted)}
+.user{display:flex;align-items:center;gap:10px;font-size:14px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#dce3ff;color:#3149a8;display:grid;place-items:center;font-weight:700}
+.content{padding:28px;max-width:1500px;margin:auto}
+.page{display:none}.page.active{display:block}
+h1{margin:0 0 6px;font-size:25px}.sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow)}
+.kpi{padding:20px}.kpi .label{font-size:13px;color:var(--muted)}.kpi .num{font-size:28px;font-weight:800;margin:8px 0}.delta{font-size:12px;color:var(--success)}
+.grid2{display:grid;grid-template-columns:1.35fr .9fr;gap:18px;margin-top:18px}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+.card-title{font-weight:750}.small{font-size:12px;color:var(--muted)}
+.card-body{padding:18px 20px}
+.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:13px 10px;border-bottom:1px solid #edf0f4;font-size:13px}.table th{color:var(--muted);font-weight:600}
+.badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#eef2f7;color:#566273}
+.badge.green{background:#e7f7ef;color:#16845b}.badge.blue{background:#eaf0ff;color:#3b5ccc}.badge.orange{background:#fff4df;color:#a7650b}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font-size:13px}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}.btn.ghost{background:#f7f8fc}.btn.ai{background:#111827;color:#fff;border-color:#111827}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.searchbox{display:flex;gap:10px;margin-bottom:18px}.searchbox input{flex:1;border:1px solid #dce1ea;border-radius:10px;padding:13px 15px;background:#fff;outline:none}.searchbox input:focus{border-color:#8395e9;box-shadow:0 0 0 3px #eef1ff}
+.search-meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
+.candidate{display:grid;grid-template-columns:1fr auto;gap:15px;padding:16px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fff}
+.candidate:hover{border-color:#b9c4f3}
+.name{font-weight:750;font-size:15px}.role{font-size:13px;color:var(--muted);margin:4px 0 9px}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{background:#f1f3f7;padding:4px 8px;border-radius:6px;font-size:11px;color:#536072}
+.score{font-size:22px;font-weight:800;color:var(--primary);text-align:right}.score small{display:block;font-size:10px;color:var(--muted);font-weight:500}
+.ai-panel{background:linear-gradient(180deg,#111827,#1d2841);color:#fff;border-radius:13px;padding:20px;min-height:310px}
+.ai-panel h3{margin:0 0 6px}.ai-input{display:flex;gap:8px;margin:16px 0}.ai-input input{flex:1;border:0;border-radius:9px;padding:11px;background:#fff;color:#111}.ai-result{background:#26324d;border:1px solid #37445f;border-radius:10px;padding:12px;margin-top:9px;font-size:13px}
+.timeline{display:flex;flex-direction:column;gap:12px}.task{display:flex;gap:12px;align-items:flex-start}.dot{width:9px;height:9px;border-radius:50%;background:var(--primary);margin-top:6px;flex:none}.task b{font-size:13px}.task span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.detail{display:grid;grid-template-columns:1fr 330px;gap:18px}.profile-head{display:flex;gap:16px;align-items:center}.big-avatar{width:68px;height:68px;border-radius:16px;background:#e6ebff;color:#3b5ccc;display:grid;place-items:center;font-size:22px;font-weight:800}.profile-meta h2{margin:0 0 4px}.profile-meta p{margin:0;color:var(--muted);font-size:13px}.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.info{background:#f7f8fb;border-radius:9px;padding:12px}.info label{display:block;color:var(--muted);font-size:11px}.info strong{display:block;margin-top:4px;font-size:13px}
+.progress{height:7px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress span{display:block;height:100%;background:var(--primary);border-radius:20px}
+.empty{padding:50px;text-align:center;color:var(--muted)}
+@media(max-width:1050px){.grid4{grid-template-columns:repeat(2,1fr)}.grid2,.detail{grid-template-columns:1fr}.sidebar{width:190px}.main{margin-left:190px;width:calc(100% - 190px)}}
+</style>
+<style>
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.modal-backdrop.show{display:flex}.modal{width:min(900px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 20px 70px rgba(0,0,0,.22)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.modal-body{padding:22px}.modal-close{border:0;background:#f2f4f8;border-radius:8px;width:34px;height:34px}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;border:1px solid #dce1ea;border-radius:8px;padding:10px 11px;background:#fff}.field.full{grid-column:1/-1}
+.position-row{cursor:pointer}.position-row:hover{background:#f7f8ff}.position-detail{margin-top:18px}
+.toast{position:fixed;right:24px;bottom:24px;background:#111827;color:#fff;padding:13px 17px;border-radius:9px;display:none;z-index:80;font-size:13px}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+<style>
+.interview-list-card{padding:0;background:transparent;box-shadow:none;border:0}
+.interview-item{
+  background:#fff;border:1px solid #e2e7ef;border-radius:16px;
+  padding:20px;margin-bottom:12px;display:flex;align-items:center;
+  justify-content:space-between;gap:20px;transition:.15s;
+}
+.interview-item:hover{box-shadow:0 8px 24px rgba(31,41,55,.06);border-color:#d5dce8}
+.interview-main{min-width:0}
+.interview-title{font-size:19px;font-weight:800;color:#111827;margin-bottom:8px}
+.interview-sub{font-size:14px;color:#718096;margin-bottom:12px}
+.interview-actions{display:flex;align-items:center;gap:10px}
+.detail-btn{min-width:62px;height:72px;background:#fff;border:1px solid #e1e6ee;border-radius:10px;font-size:14px;cursor:pointer}
+.detail-btn:hover{background:#f7f9fc}
+.progress-modal{width:min(920px,96vw)}
+.progress-summary{
+ display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px
+}
+.progress-stat{border:1px solid #e3e8ef;border-radius:12px;padding:14px;background:#fafbfc}
+.progress-stat label{display:block;color:#7b8798;font-size:12px;margin-bottom:6px}
+.progress-stat strong{font-size:16px;color:#172033}
+.progress-line{position:relative;margin:28px 8px 34px}
+.progress-line:before{content:"";position:absolute;top:16px;left:16px;right:16px;height:3px;background:#e5eaf1}
+.progress-steps{position:relative;display:grid;grid-template-columns:repeat(5,1fr)}
+.progress-step{text-align:center;position:relative}
+.step-dot{width:32px;height:32px;border-radius:50%;margin:0 auto 9px;background:#e9edf4;color:#8490a0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;position:relative;z-index:2}
+.progress-step.done .step-dot,.progress-step.current .step-dot{background:#4f67d8;color:#fff}
+.progress-step.current .step-dot{box-shadow:0 0 0 5px #e8ecff}
+.step-title{font-size:13px;font-weight:700;color:#687387}
+.progress-step.done .step-title,.progress-step.current .step-title{color:#25304a}
+.progress-detail-box{background:#f7f9fc;border:1px solid #e3e8ef;border-radius:12px;padding:18px;margin-top:10px}
+.progress-detail-box h3{margin:0 0 12px;font-size:16px}
+.progress-detail-row{display:grid;grid-template-columns:120px 1fr;padding:8px 0;border-bottom:1px solid #e5e9ef;font-size:13px}
+.progress-detail-row:last-child{border-bottom:0}
+.progress-detail-row .label{color:#7b8798}
+@media(max-width:700px){
+ .interview-item{align-items:flex-start}.interview-actions{flex-shrink:0}
+ .progress-summary{grid-template-columns:repeat(2,1fr)}
+ .progress-steps{grid-template-columns:1fr}
+ .progress-line:before{display:none}.progress-step{text-align:left;display:flex;align-items:center;gap:10px;margin:8px 0}
+ .step-dot{margin:0}
+}
+</style>
+
+<style>
+html,body{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px}
+button,input,select,textarea{font:inherit}
+button,.btn,.nav button{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+img,svg{max-width:100%;height:auto}
+
+@media(max-width:768px){
+  h1{font-size:27px!important;line-height:1.25}
+  h2{font-size:21px!important}
+  .sub{font-size:14px!important;line-height:1.55}
+  .nav{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{flex:0 0 auto;padding:10px 13px!important;font-size:13px!important}
+  .card{border-radius:13px!important}
+  .form-grid{grid-template-columns:1fr!important;gap:12px!important}
+  .field.full{grid-column:auto!important}
+  .field input,.field select,.field textarea{min-height:44px;font-size:16px}
+  .card-body:has(.table){overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.table{min-width:680px}
+  .candidate,.interview-item{padding:15px!important;gap:12px!important;border-radius:12px!important}
+  .candidate .name,.interview-title{font-size:16px!important;line-height:1.45}
+  .candidate .role,.interview-sub{font-size:13px!important;line-height:1.45}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip,.badge{font-size:11px!important}
+  .score{font-size:20px!important;white-space:nowrap}
+  .interview-actions{flex-shrink:0}
+  .detail-btn{min-width:58px;min-height:58px}
+  .modal-backdrop{padding:8px!important;align-items:flex-end}
+  .modal{width:100%!important;max-width:100%!important;max-height:94vh!important;border-radius:18px 18px 0 0!important;margin:0!important}
+  .modal-head{padding:15px 16px!important;position:sticky;top:0;background:#fff;z-index:2}
+  .modal-body{padding:16px!important}
+  .profile-head{gap:10px!important}
+  .profile-meta h2{font-size:20px!important}
+  .info-grid,.progress-summary{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .info{padding:12px!important}
+  .progress-line{margin:20px 0!important}
+  .progress-steps{grid-template-columns:1fr!important;gap:4px}
+  .progress-line:before{display:none!important}
+  .progress-step{display:flex!important;align-items:center;gap:10px;text-align:left!important;padding:6px 0}
+  .step-dot{flex:0 0 32px;margin:0!important}
+  .progress-detail-row{grid-template-columns:85px 1fr!important;gap:8px;line-height:1.5}
+  .actions{display:flex;flex-wrap:wrap;gap:8px}
+  .actions .btn{flex:1 1 140px}
+  .ai-panel{padding:16px!important}
+}
+@media(max-width:420px){
+  h1{font-size:24px!important}
+  .card-body{padding:14px!important}
+  .interview-item{align-items:stretch!important}
+  .info-grid,.progress-summary{grid-template-columns:1fr!important}
+  .detail-btn{min-width:54px;min-height:54px}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">AI <span>Talent</span> Platform</div>
+  <div class="menu-title">업무관리</div>
+  <div class="nav">
+    <button class="active" data-page="dashboard">▣ <span class="icon"></span>Dashboard</button>
+    <button data-page="candidates">◉ <span class="icon"></span>후보자 DB</button>
+    <button data-page="companies">▤ <span class="icon"></span>기업 DB</button>
+    <button data-page="projects">◆ <span class="icon"></span>채용 Position</button>
+    <button data-page="interviews">◷ <span class="icon"></span>면접/추천 관리</button>
+    <button data-page="documents">□ <span class="icon"></span>문서관리</button>
+  </div>
+  <div class="menu-title">AI</div>
+  <div class="nav">
+    <button data-page="aisearch">✦ <span class="icon"></span>AI Search</button>
+    <button data-page="aiassistant">✧ <span class="icon"></span>AI Assistant</button>
+  </div>
+  <div class="menu-title">관리</div>
+  <div class="nav">
+    <button data-page="stats">▥ <span class="icon"></span>통계</button>
+    <button data-page="settings">⚙ <span class="icon"></span>관리자</button>
+  </div>
+  <div class="sidebar-bottom">Prototype v1.0<br>Synology NAS / PostgreSQL / AI Agent</div>
+</aside>
+
+<main class="main">
+<header class="topbar"><div class="breadcrumb" id="crumb">Dashboard</div><div class="user"><span>김팀장</span><div class="avatar">김</div></div></header>
+<section class="content">
+
+<div id="dashboard" class="page active">
+<h1>Dashboard</h1><div class="sub">오늘의 채용 업무와 AI 추천 현황을 한눈에 확인하세요.</div>
+<div class="grid4">
+ <div class="card kpi"><div class="label">진행중 Position</div><div class="num">12</div><div class="delta">▲ 3 이번 주</div></div>
+ <div class="card kpi"><div class="label">추천 대기 후보자</div><div class="num">34</div><div class="delta">▲ 8 신규</div></div>
+ <div class="card kpi"><div class="label">이번 주 면접</div><div class="num">8</div><div class="delta">2건 오늘</div></div>
+ <div class="card kpi"><div class="label">후보자 DB</div><div class="num">103,284</div><div class="delta">자동 분석 92%</div></div>
+</div>
+<div class="grid2">
+ <div class="card"><div class="card-head"><div class="card-title">진행중 채용 Position</div><button class="btn" onclick="go('projects')">전체보기</button></div><div class="card-body">
+<table class="table"><thead><tr><th>기업</th><th>Position</th><th>담당</th><th>상태</th></tr></thead><tbody>
+<tr><td>삼성전자</td><td>Backend Developer</td><td>김팀장</td><td><span class="badge blue">후보자 검색</span></td></tr>
+<tr><td>ABC금융</td><td>IT Project Manager</td><td>이과장</td><td><span class="badge orange">면접진행</span></td></tr>
+<tr><td>넥스트모빌리티</td><td>Data Engineer</td><td>김팀장</td><td><span class="badge green">추천완료</span></td></tr>
+<tr><td>코어솔루션</td><td>HR Director</td><td>박부장</td><td><span class="badge blue">후보자 검색</span></td></tr>
+</tbody></table></div></div>
+ <div class="ai-panel"><h3>✦ AI Talent Assistant</h3><div style="color:#aeb9cc;font-size:12px">업무 데이터를 자연어로 검색하고 후보자를 추천합니다.</div>
+ <div class="ai-input"><input id="dashAi" placeholder="예: 금융권 Java 10년 이상 찾아줘"><button class="btn primary" onclick="runAi('dashAi','dashResult')">검색</button></div>
+ <div id="dashResult" class="ai-result">예시 질문을 입력하면 AI가 후보자와 근거를 보여줍니다.</div></div>
+</div>
+<div class="card" style="margin-top:18px"><div class="card-head"><div class="card-title">오늘의 업무</div><span class="small">2026.08.10</span></div><div class="card-body timeline">
+<div class="task"><i class="dot"></i><div><b>삼성전자 Backend 후보자 3명 검토</b><span>마감 오늘 15:00 · 김팀장</span></div></div>
+<div class="task"><i class="dot"></i><div><b>김철수 후보자 면접 결과 확인</b><span>ABC금융 · 오늘 16:30</span></div></div>
+<div class="task"><i class="dot"></i><div><b>신규 이력서 18건 AI 분석 완료</b><span>자동 분류 결과 확인 필요</span></div></div>
+</div></div>
+</div>
+
+<div id="candidates" class="page">
+<h1>후보자 DB</h1><div class="sub">103,284명의 후보자 정보를 검색하고 관리합니다.</div>
+<div class="searchbox"><input id="candidateSearch" value="금융권 Java 10년 이상 PM 경험" placeholder="이름, 회사, 기술 또는 자연어로 검색"><button class="btn ai" onclick="candidateSearch()">✦ AI 검색</button><button class="btn primary">+ 후보자 등록</button></div>
+<div class="search-meta"><span class="small">AI 매칭 결과 <b style="color:#18212f">27명</b></span><select class="btn"><option>적합도순</option><option>최신등록순</option></select></div>
+<div id="candidateList"></div>
+</div>
+
+<div id="aisearch" class="page">
+<h1>AI Search</h1><div class="sub">후보자 조건을 문장으로 입력하면 AI가 DB와 이력서를 함께 분석합니다.</div>
+<div class="card" style="padding:20px"><div class="searchbox"><input id="aiSearchInput" placeholder='예: "금융권에서 Java 10년 이상, PM 경험이 있는 서울 근무 가능자"'><button class="btn ai" onclick="runAISearch()">✦ AI 검색</button></div>
+<div id="aiSearchResult" class="empty">검색 조건을 입력해 주세요.</div></div>
+</div>
+
+<div id="aiassistant" class="page">
+<h1>AI Assistant</h1><div class="sub">헤드헌터의 반복 업무를 AI가 지원합니다.</div>
+<div class="detail"><div class="card"><div class="card-head"><div class="card-title">대화형 업무 지원</div></div><div class="card-body" id="chatArea">
+<div class="ai-result" style="background:#f5f7fb;color:#18212f;border-color:#e4e8ef">안녕하세요. 후보자 검색, 채용 Position 분석, 이력서 요약, 추천메일 작성 등을 도와드릴 수 있습니다.</div>
+</div><div class="card-body"><div class="searchbox"><input id="chatInput" placeholder="예: 삼성전자 포지션에 적합한 후보자 3명 추천해줘"><button class="btn ai" onclick="chat()">전송</button></div></div></div>
+<div class="card"><div class="card-head"><div class="card-title">빠른 업무</div></div><div class="card-body actions">
+<button class="btn" onclick="quick('후보자 추천')">후보자 추천</button><button class="btn" onclick="quick('이력서 요약')">이력서 요약</button><button class="btn" onclick="quick('추천메일 작성')">추천메일 작성</button><button class="btn" onclick="quick('채용현황 요약')">채용현황 요약</button>
+</div></div></div>
+</div>
+
+<div id="companies" class="page">
+<h1>기업 DB</h1><div class="sub">고객사, 담당자, 계약 및 채용 이력을 관리합니다.</div>
+<div class="card"><div class="card-head"><div class="card-title">주요 고객사</div><button class="btn primary" onclick="openCompanyForm()">+ 기업 등록</button></div>
+<div class="card-body"><table class="table"><thead><tr><th>기업명</th><th>담당자</th><th>연락처</th><th>진행 Position</th><th>계약상태</th></tr></thead><tbody id="companyTableBody"></tbody></table></div></div></div>
+
+<div id="projects" class="page">
+<div class="card" style="margin-bottom:18px"><div class="card-body"><b>채용 Position</b> · 기업별 채용의뢰를 등록하고 기업/Position을 클릭하면 AI 추천 후보자를 확인할 수 있습니다.</div></div>
+<h1>채용 Position</h1><div class="sub">기업별 채용 의뢰, AI 후보자 추천, 면접 등록을 한 화면에서 관리합니다.</div>
+<div class="card"><div class="card-head"><div class="card-title">진행 Position</div><button class="btn primary" onclick="openPositionForm()">+ Position 등록</button></div>
+<div class="card-body"><table class="table"><thead><tr><th>기업</th><th>Position</th><th>경력</th><th>마감</th><th>후보자</th><th>진행상태</th></tr></thead><tbody id="positionTableBody"></tbody></table>
+<div id="positionRecommendationArea"></div></div></div></div>
+
+<div id="interviews" class="page">
+<h1>면접 / 추천 관리</h1>
+<div class="sub">추천 후보자와 면접 일정을 단계별로 관리합니다.</div>
+
+<div class="card interview-list-card">
+  <div class="card-body" id="interviewList"></div>
+</div>
+</div>
+
+<div id="documents" class="page"><h1>문서관리</h1><div class="sub">이력서, 계약서, 포트폴리오를 NAS에 안전하게 저장합니다.</div><div class="card"><div class="card-head"><div class="card-title">최근 문서</div><button class="btn primary">+ 업로드</button></div><div class="card-body"><table class="table"><thead><tr><th>파일명</th><th>분류</th><th>저장위치</th><th>AI 분석</th></tr></thead><tbody><tr><td>김철수_이력서.pdf</td><td>이력서</td><td>NAS / Candidates</td><td><span class="badge green">완료</span></td></tr><tr><td>ABC금융_채용계약서.pdf</td><td>계약서</td><td>NAS / Contracts</td><td><span class="badge green">완료</span></td></tr><tr><td>박민수_Portfolio.pdf</td><td>포트폴리오</td><td>NAS / Candidates</td><td><span class="badge orange">분석중</span></td></tr></tbody></table></div></div></div>
+
+<div id="stats" class="page"><h1>통계</h1><div class="sub">채용 성과와 후보자 DB 현황을 확인합니다.</div><div class="grid4"><div class="card kpi"><div class="label">이번 달 추천</div><div class="num">86</div><div class="delta">▲ 14%</div></div><div class="card kpi"><div class="label">면접 전환율</div><div class="num">42%</div><div class="delta">▲ 5.2%p</div></div><div class="card kpi"><div class="label">채용 성공</div><div class="num">19</div><div class="delta">▲ 3건</div></div><div class="card kpi"><div class="label">AI 추천 적중률</div><div class="num">91%</div><div class="delta">최근 30일</div></div></div></div>
+
+<div id="settings" class="page"><h1>관리자</h1><div class="sub">사용자 권한, NAS 상태, AI 설정을 관리합니다.</div><div class="card"><div class="card-body"><div class="info-grid"><div class="info"><label>NAS 저장공간</label><strong>1.2TB / 4TB</strong><div class="progress" style="margin-top:8px"><span style="width:30%"></span></div></div><div class="info"><label>DB 상태</label><strong style="color:#16845b">정상</strong></div><div class="info"><label>마지막 백업</label><strong>오늘 03:00</strong></div><div class="info"><label>AI 모델</label><strong>Qwen / API</strong></div></div></div></div></div>
+
+</section>
+</main>
+</div>
+
+<div id="companyModal" class="modal-backdrop"><div class="modal"><div class="modal-head"><b>기업 등록</b><button class="modal-close" onclick="closeModal('companyModal')">✕</button></div><div class="modal-body"><div class="form-grid">
+<div class="field"><label>기업명 *</label><input id="newCompanyName"></div><div class="field"><label>업종</label><input id="newCompanyIndustry"></div>
+<div class="field"><label>담당자 *</label><input id="newCompanyContact"></div><div class="field"><label>연락처</label><input id="newCompanyPhone"></div>
+<div class="field full"><label>메모</label><textarea id="newCompanyMemo" rows="3"></textarea></div></div>
+<div class="actions" style="justify-content:flex-end;margin-top:18px"><button class="btn" onclick="closeModal('companyModal')">취소</button><button class="btn primary" onclick="saveCompany()">등록</button></div></div></div></div>
+<div id="positionModal" class="modal-backdrop"><div class="modal"><div class="modal-head"><b>채용 Position 신규 등록</b><button class="modal-close" onclick="closeModal('positionModal')">✕</button></div><div class="modal-body"><div class="form-grid">
+<div class="field"><label>기업 *</label><select id="newPositionCompany"></select></div><div class="field"><label>Position *</label><input id="newPositionName"></div>
+<div class="field"><label>경력조건</label><input id="newPositionCareer" value="5~10년"></div><div class="field"><label>채용인원</label><input id="newPositionCount" value="1명"></div>
+<div class="field"><label>마감일</label><input id="newPositionDeadline" type="date" value="2026-08-31"></div><div class="field"><label>담당 헤드헌터</label><input id="newPositionManager" value="김팀장"></div>
+<div class="field full"><label>필수 기술 / 역량</label><input id="newPositionSkills" value="Java, Spring Boot, PostgreSQL, AWS"></div>
+<div class="field full"><label>채용 요구사항</label><textarea id="newPositionDesc" rows="4">대규모 서비스 백엔드 개발 경험 및 협업 능력 보유자.</textarea></div></div>
+<div class="actions" style="justify-content:flex-end;margin-top:18px"><button class="btn" onclick="closeModal('positionModal')">취소</button><button class="btn primary" onclick="savePosition()">등록</button></div></div></div></div>
+<div id="candidateModal" class="modal-backdrop"><div class="modal"><div class="modal-head"><div><b id="candidateModalTitle">후보자 상세</b><div class="small">AI 추천 후보자 요약</div></div><button class="modal-close" onclick="closeModal('candidateModal')">✕</button></div><div class="modal-body" id="candidateModalBody"></div></div></div>
+<div id="toast" class="toast"></div>
+<div id="interviewDetailModal" class="modal-backdrop">
+  <div class="modal progress-modal">
+    <div class="modal-head">
+      <div>
+        <b id="interviewDetailTitle">면접 진행사항</b>
+        <div class="small" id="interviewDetailSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('interviewDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="interviewDetailBody"></div>
+  </div>
+</div>
+
+
+<script>
+const names=['김철수','이영희','박민수','최지훈','정하늘'];
+const data=[
+ ['김철수','Senior Java Developer','○○금융 · 12년','95%',['Java','Spring','금융권','PM']],
+ ['이영희','Backend Engineer','△△은행 · 10년','91%',['Java','Spring','금융권','AWS']],
+ ['박민수','Tech Lead','ABC시스템 · 11년','87%',['Java','AWS','PM','Cloud']],
+ ['최지훈','Software Architect','○○카드 · 13년','84%',['Java','Architecture','금융권']],
+ ['정하늘','Project Manager','△△IT · 9년','82%',['PM','금융권','Agile']]
+];
+function renderCandidates(){
+ const q=(document.getElementById('candidateSearch')?.value||'').trim();
+ document.getElementById('candidateList').innerHTML=data.map((d,i)=>`<div class="candidate" onclick="showCandidate('${d[0]}')"><div><div class="name">${d[0]}</div><div class="role">${d[1]} · ${d[2]}</div><div class="chips">${d[4].map(x=>`<span class="chip">${x}</span>`).join('')}</div></div><div><div class="score">${d[3]}<small>AI 적합도</small></div><button class="btn" style="margin-top:8px" onclick="event.stopPropagation();showCandidate('${d[0]}')">상세</button></div></div>`).join('');
+}
+renderCandidates();
+function go(page){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(page).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+ const label=document.querySelector(`[data-page="${page}"]`)?.textContent.trim()||page;
+ document.getElementById('crumb').textContent=label;
+ if(page==='candidates') renderCandidates();
+ window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function candidateSearch(){renderCandidates(); alert('AI가 103,284명의 후보자 DB와 문서를 분석했습니다. 적합도순 27명을 찾았습니다.');}
+function showCandidate(name){
+ const d=data.find(x=>x[0]===name);
+ document.getElementById('candidateList').innerHTML=`<div class="card"><div class="card-head"><button class="btn" onclick="renderCandidates()">← 목록</button><div class="actions"><button class="btn">이력서</button><button class="btn primary">추천메일 작성</button></div></div><div class="card-body"><div class="profile-head"><div class="big-avatar">${name[0]}</div><div class="profile-meta"><h2>${d[0]}</h2><p>${d[1]} · ${d[2]}</p></div></div><div class="info-grid"><div class="info"><label>AI 적합도</label><strong style="color:#3b5ccc">${d[3]}</strong></div><div class="info"><label>경력</label><strong>12년</strong></div><div class="info"><label>희망연봉</label><strong>9,000만원</strong></div><div class="info"><label>근무지</label><strong>서울</strong></div></div><h3 style="margin-top:25px">AI 분석</h3><p style="font-size:13px;line-height:1.7">금융권 경력과 Java/Spring 기술 역량이 채용 Position과 높은 수준으로 일치합니다. PM 경험이 있어 기술 리딩 역할까지 수행할 가능성이 높습니다.</p><h3>핵심 역량</h3><div class="chips">${d[4].map(x=>`<span class="chip">${x} ★★★★★</span>`).join('')}</div></div></div>`;
+}
+function runAi(inputId,resultId){
+ const v=document.getElementById(inputId).value.trim();
+ document.getElementById(resultId).innerHTML=v?`<b>AI 분석 결과</b><br><br>조건에 맞는 후보자 <strong>27명</strong>을 찾았습니다.<br>Top 후보: <b>김철수(95%)</b>, 이영희(91%), 박민수(87%).<br><span style="color:#aeb9cc">근거: 금융권 경력 · Java/Spring · PM 경험 · 경력연차</span>`:'검색 조건을 입력해 주세요.';
+}
+function runAISearch(){
+ const v=document.getElementById('aiSearchInput').value.trim();
+ document.getElementById('aiSearchResult').innerHTML=v?`<div style="text-align:left"><div class="search-meta"><b>AI 매칭 결과 27명</b><span class="badge blue">적합도순</span></div>${data.slice(0,4).map(d=>`<div class="candidate"><div><div class="name">${d[0]}</div><div class="role">${d[1]} · ${d[2]}</div><div class="chips">${d[4].map(x=>`<span class="chip">${x}</span>`).join('')}</div></div><div class="score">${d[3]}<small>AI 적합도</small></div></div>`).join('')}</div>`:'검색 조건을 입력해 주세요.';
+}
+function chat(){
+ const input=document.getElementById('chatInput'), v=input.value.trim(); if(!v)return;
+ const area=document.getElementById('chatArea');
+ area.innerHTML += `<div style="margin:12px 0;padding:12px;border-radius:10px;background:#eef1ff;font-size:13px"><b>나</b><br>${v}</div>`;
+ area.innerHTML += `<div class="ai-result" style="background:#f5f7fb;color:#18212f;border-color:#e4e8ef"><b>AI</b><br><br>요청하신 업무를 분석했습니다. 후보자 DB와 채용 Position 정보를 기준으로 <b>김철수(95%), 이영희(91%), 박민수(87%)</b>를 추천합니다.<br><br><button class="btn primary" onclick="go('candidates')">후보자 보기</button></div>`;
+ input.value='';
+}
+function quick(t){document.getElementById('chatInput').value=t+' 요청해줘';chat();}
+</script>
+
+<script>
+const hhCompanies=[
+ {id:1,name:'삼성전자',contact:'홍길동',phone:'02-1111-1111',positions:4,status:'계약중'},
+ {id:2,name:'ABC금융',contact:'김상무',phone:'02-2222-2222',positions:2,status:'계약중'},
+ {id:3,name:'넥스트모빌리티',contact:'이정민',phone:'02-3333-3333',positions:3,status:'진행중'}
+];
+const hhPositions=[
+ {id:1,company:'삼성전자',name:'Backend Developer',career:'5~10년',deadline:'2026-08-20',count:'2명',skills:'Java, Spring Boot, PostgreSQL, AWS',status:'검색중'},
+ {id:2,company:'ABC금융',name:'IT Project Manager',career:'7~12년',deadline:'2026-08-18',count:'1명',skills:'PM, 금융권, Agile, IT',status:'면접'},
+ {id:3,company:'넥스트모빌리티',name:'Data Engineer',career:'5~10년',deadline:'2026-08-25',count:'2명',skills:'Python, AWS, Data',status:'추천완료'}
+];
+let hhInterviews=[{candidate:'김철수',company:'삼성전자',position:'Backend Developer',date:'2026-08-12',status:'면접예정'}];
+function hEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function hToast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2200);}
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+function renderCompanies(){
+ document.getElementById('companyTableBody').innerHTML=hhCompanies.map(c=>`<tr><td><b>${hEsc(c.name)}</b></td><td>${hEsc(c.contact)}</td><td>${hEsc(c.phone)}</td><td>${c.positions}건</td><td><span class="badge ${c.status==='계약중'?'green':'blue'}">${hEsc(c.status)}</span></td></tr>`).join('');
+}
+function openCompanyForm(){['newCompanyName','newCompanyIndustry','newCompanyContact','newCompanyPhone','newCompanyMemo'].forEach(id=>document.getElementById(id).value='');openModal('companyModal')}
+function saveCompany(){
+ const name=document.getElementById('newCompanyName').value.trim(), contact=document.getElementById('newCompanyContact').value.trim();
+ if(!name||!contact){alert('기업명과 담당자는 필수입니다.');return}
+ hhCompanies.push({id:Date.now(),name,contact,phone:document.getElementById('newCompanyPhone').value.trim()||'-',positions:0,status:'신규'});
+ closeModal('companyModal');renderCompanies();go('companies');hToast(`"${name}" 기업이 등록되었습니다.`);
+}
+
+function openPositionForm(){
+ document.getElementById('newPositionCompany').innerHTML=hhCompanies.map(c=>`<option>${hEsc(c.name)}</option>`).join('');
+ openModal('positionModal');
+}
+function savePosition(){
+ const company=document.getElementById('newPositionCompany').value,name=document.getElementById('newPositionName').value.trim();
+ if(!company||!name){alert('기업과 Position은 필수입니다.');return}
+ hhPositions.push({id:Date.now(),company,name,career:document.getElementById('newPositionCareer').value,deadline:document.getElementById('newPositionDeadline').value,count:document.getElementById('newPositionCount').value,skills:document.getElementById('newPositionSkills').value,status:'신규'});
+ const c=hhCompanies.find(x=>x.name===company);if(c)c.positions++;
+ closeModal('positionModal');renderPositions();go('projects');hToast(`"${company} - ${name}" Position이 등록되었습니다.`);
+}
+function renderPositions(){
+ document.getElementById('positionTableBody').innerHTML=hhPositions.map(p=>`<tr class="position-row" onclick="showPositionRecommendations(${p.id})"><td><b>${hEsc(p.company)}</b></td><td>${hEsc(p.name)}</td><td>${hEsc(p.career)}</td><td>${hEsc(p.deadline)}</td><td>${p.count} / <b>AI 추천 5명</b></td><td><span class="badge ${p.status==='면접'?'orange':p.status==='추천완료'?'green':'blue'}">${hEsc(p.status)}</span></td></tr>`).join('');
+ document.getElementById('positionRecommendationArea').innerHTML='';
+}
+function showPositionRecommendations(id){
+ const p=hhPositions.find(x=>x.id===id);
+ const ranked=(typeof data!=='undefined'?data:[]).slice(0,5);
+ document.getElementById('positionRecommendationArea').innerHTML=`<div class="position-detail card"><div class="card-head"><div><b>${hEsc(p.company)} · ${hEsc(p.name)}</b><div class="small">필수역량: ${hEsc(p.skills)} · ${hEsc(p.career)}</div></div><span class="badge blue">AI 추천 후보자 5명</span></div><div class="card-body"><div class="notice">기업/Position 요구사항과 후보자 DB의 경력·기술·산업 경험을 AI가 비교하여 적합도순으로 추천합니다.</div><div style="margin-top:16px">${ranked.map((d,i)=>`<div class="candidate" onclick="openCandidateModal('${hEsc(d[0])}',${p.id})"><div><div class="name">${hEsc(d[0])} <span class="badge ${i<3?'green':'blue'}">${i+1}순위</span></div><div class="role">${hEsc(d[1])} · ${hEsc(d[2])}</div><div class="chips">${d[4].map(x=>`<span class="chip">${hEsc(x)}</span>`).join('')}</div></div><div><div class="score">${hEsc(d[3])}<small>AI 적합도</small></div><button class="btn" onclick="event.stopPropagation();openCandidateModal('${hEsc(d[0])}',${p.id})">상세</button></div></div>`).join('')}</div></div></div>`;
+ document.getElementById('positionRecommendationArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openCandidateModal(name,pid){
+ const d=data.find(x=>x[0]===name),p=hhPositions.find(x=>x.id===pid);
+ document.getElementById('candidateModalTitle').textContent=`${name} · 후보자 정보`;
+ document.getElementById('candidateModalBody').innerHTML=`<div class="profile-head"><div class="big-avatar">${hEsc(name[0])}</div><div class="profile-meta"><h2>${hEsc(d[0])}</h2><p>${hEsc(d[1])} · ${hEsc(d[2])}</p></div></div><div class="info-grid"><div class="info"><label>AI 적합도</label><strong style="color:#3b5ccc">${hEsc(d[3])}</strong></div><div class="info"><label>희망연봉</label><strong>${hEsc(d[6])}</strong></div><div class="info"><label>근무지</label><strong>${hEsc(d[5])}</strong></div><div class="info"><label>핵심기술</label><strong>${d[4].map(hEsc).join(', ')}</strong></div></div><h3>AI 후보자 요약</h3><div class="ai-panel" style="min-height:auto"><h3>✦ ${hEsc(d[0])} 추천 분석</h3><p style="color:#cbd5e1;line-height:1.7">${hEsc(p.company)}의 ${hEsc(p.name)} 요구사항과 후보자 경력/기술을 비교한 결과입니다.</p><b>추천 근거</b><br><span style="color:#cbd5e1">경력 적합성 · 기술 적합성 · 산업 경험 · 직무 연관성</span></div><div class="actions" style="justify-content:flex-end;margin-top:20px"><button class="btn" onclick="openResume('${hEsc(d[7])}','${hEsc(d[0])}')">📄 이력서</button><button class="btn primary" onclick="registerInterview('${hEsc(d[0])}',${p.id})">면접등록</button></div>`;
+ openModal('candidateModal');
+}
+function openResume(path,name){const w=window.open(path,'_blank');if(!w)alert('브라우저의 팝업 차단을 해제해주세요.');hToast(`${name} 이력서를 열었습니다. 실제 운영에서는 NAS 원본 파일 URL을 연결합니다.`)}
+function registerInterview(name,pid){
+ const p=hhPositions.find(x=>x.id===pid);
+ if(!hhInterviews.some(x=>x.candidate===name&&x.company===p.company&&x.position===p.name))hhInterviews.push({candidate:name,company:p.company,position:p.name,date:'일정 미등록',status:'면접등록'});
+ closeModal('candidateModal');go('interviews');hToast(`${name} 후보자가 면접/추천 관리에 등록되었습니다.`);
+}
+function renderInterviews(){
+ document.getElementById('interviewCount').textContent=hhInterviews.length+'명';
+ document.getElementById('interviewList').innerHTML=hhInterviews.map(x=>`<div class="candidate"><div><div class="name">${hEsc(x.candidate)} · ${hEsc(x.company)} ${hEsc(x.position)}</div><div class="role">${x.date==='일정 미등록'?'면접 일정 미등록':`면접일 ${hEsc(x.date)}`}</div><span class="badge ${x.status==='면접등록'?'blue':'orange'}">${hEsc(x.status)}</span></div><button class="btn primary" onclick="alert('면접 일정 등록\\n후보자: ${hEsc(x.candidate)}\\n기업: ${hEsc(x.company)}')">면접일정</button></div>`).join('');
+}
+function go(page){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(page).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+ document.getElementById('crumb').textContent=document.querySelector(`[data-page="${page}"]`)?.textContent.trim()||page;
+ if(page==='candidates')renderCandidates();if(page==='companies')renderCompanies();if(page==='projects')renderPositions();if(page==='interviews')renderInterviews();
+ window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+renderCandidates();renderCompanies();renderPositions();renderInterviews();
+</script>
+
+<script>
+/* ===== 면접/추천 관리 V2 UI ===== */
+const interviewProgress = {
+  '김철수': {
+    company:'삼성전자', position:'Backend Developer', career:'12년',
+    schedule:'2026-08-12 14:00', status:'면접예정',
+    current:3,
+    steps:[
+      ['추천완료','2026-08-09','AI 추천 및 후보자 검토 완료'],
+      ['후보자 수락','2026-08-10','후보자 면접 참여 의사 확인'],
+      ['면접예정','2026-08-12 14:00','삼성전자 2차 면접 예정'],
+      ['최종 결과','-','면접 결과 입력 대기'],
+      ['채용완료','-','채용 확정 시 완료']
+    ],
+    note:'AI 적합도 95%. Java/Spring 기반 금융·대기업 프로젝트 경험이 Position 요구사항과 높은 수준으로 일치합니다.'
+  },
+  '이영희': {
+    company:'ABC금융', position:'IT PM', career:'10년',
+    schedule:'최종 결과 대기', status:'결과대기',
+    current:4,
+    steps:[
+      ['추천완료','2026-08-04','AI 추천 및 후보자 검토 완료'],
+      ['후보자 수락','2026-08-05','후보자 면접 참여 의사 확인'],
+      ['면접완료','2026-08-10','1·2차 면접 완료'],
+      ['최종 결과','대기중','기업 최종 의사결정 대기'],
+      ['채용완료','-','채용 확정 시 완료']
+    ],
+    note:'AI 적합도 91%. 금융권 프로젝트 관리 및 IT PM 경험을 바탕으로 추천된 후보자입니다.'
+  }
+};
+
+function renderInterviews(){
+  const list=document.getElementById('interviewList');
+  if(!list) return;
+  const arr=[
+    {candidate:'김철수',company:'삼성전자',position:'Backend Developer',meta:'2차 면접 예정 · 08/12 14:00',badge:'면접예정',cls:'orange'},
+    {candidate:'이영희',company:'ABC금융',position:'IT PM',meta:'최종 결과 대기',badge:'결과대기',cls:'blue'}
+  ];
+  list.innerHTML=arr.map(x=>`
+    <div class="interview-item">
+      <div class="interview-main">
+        <div class="interview-title">${x.candidate} · ${x.company} ${x.position}</div>
+        <div class="interview-sub">${x.meta}</div>
+        <span class="badge ${x.cls}">${x.badge}</span>
+      </div>
+      <div class="interview-actions">
+        <button class="detail-btn" onclick="showInterviewDetail('${x.candidate}')">상세</button>
+      </div>
+    </div>
+  `).join('');
+  const count=document.getElementById('interviewCount');
+  if(count) count.textContent=arr.length+'명';
+}
+
+function showInterviewDetail(name){
+  const d=interviewProgress[name];
+  if(!d) return;
+
+  document.getElementById('interviewDetailTitle').textContent=`${name} · 면접 진행사항`;
+  document.getElementById('interviewDetailSub').textContent=`${d.company} · ${d.position}`;
+
+  const steps=d.steps.map((s,i)=>{
+    const cls=i+1<d.current?'done':i+1===d.current?'current':'';
+    return `<div class="progress-step ${cls}">
+      <div class="step-dot">${i+1}</div>
+      <div><div class="step-title">${s[0]}</div><div class="small">${s[1]}</div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('interviewDetailBody').innerHTML=`
+    <div class="progress-summary">
+      <div class="progress-stat"><label>기업</label><strong>${d.company}</strong></div>
+      <div class="progress-stat"><label>Position</label><strong>${d.position}</strong></div>
+      <div class="progress-stat"><label>경력</label><strong>${d.career}</strong></div>
+      <div class="progress-stat"><label>현재 상태</label><strong>${d.status}</strong></div>
+    </div>
+
+    <div class="progress-line">
+      <div class="progress-steps">${steps}</div>
+    </div>
+
+    <div class="progress-detail-box">
+      <h3>현재 진행사항</h3>
+      <div class="progress-detail-row"><span class="label">면접 일정</span><span>${d.schedule}</span></div>
+      <div class="progress-detail-row"><span class="label">진행 단계</span><span>${d.steps[d.current-1][0]}</span></div>
+      <div class="progress-detail-row"><span class="label">최근 처리</span><span>${d.steps[d.current-1][2]}</span></div>
+      <div class="progress-detail-row"><span class="label">AI 추천 의견</span><span>${d.note}</span></div>
+    </div>
+
+    <div class="actions" style="justify-content:flex-end;margin-top:18px">
+      <button class="btn" onclick="alert('면접 결과 입력 화면을 연결할 수 있습니다.')">면접 결과 입력</button>
+      <button class="btn primary" onclick="alert('다음 단계로 진행되었습니다. 실제 운영에서는 DB 상태가 변경됩니다.')">다음 단계</button>
+    </div>
+  `;
+  openModal('interviewDetailModal');
+}
+
+renderInterviews();
+</script>
+
+<script>
+/* =========================================================
+   AI HeadHunter Sales Demo - End-to-End Click Flow
+   Position → AI 추천 → 후보자 상세 → 이력서 → 면접등록
+   → 면접결과 → 채용완료
+   ========================================================= */
+const salesDemo = {
+  selectedPosition: null,
+  selectedCandidate: null,
+  interviews: {
+    '김철수|삼성전자|Backend Developer': {
+      candidate:'김철수', company:'삼성전자', position:'Backend Developer',
+      career:'12년', score:'95%', schedule:'2026-08-12 14:00',
+      stage:3, status:'면접예정',
+      interview1:'2026-08-11 14:00',
+      interview2:'2026-08-12 14:00',
+      result:'',
+      note:'AI 적합도 95%. Java/Spring, 금융권 및 대규모 프로젝트 경험이 Position 요구사항과 높은 수준으로 일치합니다.'
+    }
+  }
+};
+
+function flowKey(candidate, company, position){
+  return `${candidate}|${company}|${position}`;
+}
+
+function ensureInterview(candidate, position){
+  const key=flowKey(candidate,position.company,position.name);
+  if(!salesDemo.interviews[key]){
+    salesDemo.interviews[key]={
+      candidate, company:position.company, position:position.name,
+      career:'12년', score:(data.find(x=>x[0]===candidate)||[])[3]||'90%',
+      schedule:'일정 미등록', stage:2, status:'면접등록',
+      interview1:'', interview2:'', result:'',
+      note:`${position.company} ${position.name} 요구사항과 후보자의 경력/기술을 AI가 비교하여 추천했습니다.`
+    };
+  }
+  return salesDemo.interviews[key];
+}
+
+function flowOpenCandidate(name,pid){
+  const p=hhPositions.find(x=>x.id===pid);
+  const d=data.find(x=>x[0]===name);
+  if(!p||!d) return;
+
+  salesDemo.selectedPosition=p;
+  salesDemo.selectedCandidate=name;
+
+  const extra={
+    '김철수':{career:'12년',salary:'9,000만원',location:'서울',resume:'demo_resume_kimcheolsu.html'},
+    '이영희':{career:'10년',salary:'8,500만원',location:'서울',resume:'demo_resume_kimcheolsu.html'},
+    '박민수':{career:'11년',salary:'9,200만원',location:'서울',resume:'demo_resume_kimcheolsu.html'},
+    '최지훈':{career:'13년',salary:'9,500만원',location:'서울',resume:'demo_resume_kimcheolsu.html'},
+    '정하늘':{career:'9년',salary:'8,000만원',location:'서울',resume:'demo_resume_kimcheolsu.html'}
+  }[name]||{career:'10년',salary:'협의',location:'서울',resume:'demo_resume_kimcheolsu.html'};
+
+  document.getElementById('candidateModalTitle').textContent=`${name} · 후보자 정보`;
+  document.getElementById('candidateModalBody').innerHTML=`
+    <div class="profile-head">
+      <div class="big-avatar">${hEsc(name[0])}</div>
+      <div class="profile-meta">
+        <h2>${hEsc(d[0])}</h2>
+        <p>${hEsc(d[1])} · ${hEsc(d[2])}</p>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info"><label>AI 적합도</label><strong style="color:#3b5ccc">${hEsc(d[3])}</strong></div>
+      <div class="info"><label>경력</label><strong>${extra.career}</strong></div>
+      <div class="info"><label>희망연봉</label><strong>${extra.salary}</strong></div>
+      <div class="info"><label>근무지</label><strong>${extra.location}</strong></div>
+    </div>
+
+    <div style="margin-top:20px">
+      <div class="small">지원 Position</div>
+      <b>${hEsc(p.company)} · ${hEsc(p.name)}</b>
+    </div>
+
+    <h3 style="margin-top:22px">AI 후보자 요약</h3>
+    <div class="ai-panel" style="min-height:auto">
+      <h3>✦ ${hEsc(d[0])} 추천 분석</h3>
+      <p style="color:#cbd5e1;line-height:1.7">
+        ${hEsc(p.company)}의 ${hEsc(p.name)} 요구사항과 후보자의 경력·기술·산업 경험을 비교했습니다.
+      </p>
+      <b>추천 근거</b><br>
+      <span style="color:#cbd5e1">경력 적합성 · 기술 적합성 · 산업 경험 · 직무 연관성</span>
+    </div>
+
+    <h3>핵심 기술</h3>
+    <div class="chips">${d[4].map(x=>`<span class="chip">${hEsc(x)}</span>`).join('')}</div>
+
+    <div class="actions" style="justify-content:flex-end;margin-top:20px">
+      <button class="btn" onclick="flowOpenResume('${extra.resume}','${hEsc(name)}')">📄 이력서</button>
+      <button class="btn primary" onclick="flowRegisterInterview('${hEsc(name)}',${p.id})">면접등록</button>
+    </div>
+  `;
+  openModal('candidateModal');
+}
+
+function flowOpenResume(path,name){
+  const w=window.open(path,'_blank');
+  if(!w){
+    alert('브라우저의 팝업 차단을 해제해주세요.');
+    return;
+  }
+  hToast(`${name} 원본 이력서를 열었습니다.`);
+}
+
+function flowRegisterInterview(name,pid){
+  const p=hhPositions.find(x=>x.id===pid);
+  if(!p) return;
+  const item=ensureInterview(name,p);
+  salesDemo.selectedCandidate=name;
+  salesDemo.selectedPosition=p;
+  item.status='면접등록';
+  item.stage=2;
+  closeModal('candidateModal');
+  go('interviews');
+  renderSalesInterviews();
+  hToast(`${name} 후보자가 면접/추천 관리에 등록되었습니다.`);
+}
+
+function renderSalesInterviews(){
+  const list=document.getElementById('interviewList');
+  if(!list) return;
+  const arr=Object.values(salesDemo.interviews);
+
+  list.innerHTML=arr.map((x,idx)=>{
+    const cls=x.status==='채용완료'?'green':x.status==='최종합격'?'green':x.status==='결과대기'?'blue':'orange';
+    const meta=x.status==='면접등록'?'면접 일정 등록 필요':
+      x.status==='면접예정'?`2차 면접 예정 · ${x.schedule}`:
+      x.status==='결과대기'?'최종 결과 입력 대기':
+      x.status==='최종합격'?'최종 합격 · 채용완료 처리 필요':
+      x.status==='채용완료'?'채용 완료':'진행 중';
+
+    return `<div class="interview-item">
+      <div class="interview-main">
+        <div class="interview-title">${hEsc(x.candidate)} · ${hEsc(x.company)} ${hEsc(x.position)}</div>
+        <div class="interview-sub">${meta}</div>
+        <span class="badge ${cls}">${hEsc(x.status)}</span>
+      </div>
+      <div class="interview-actions">
+        <button class="detail-btn" onclick="flowShowInterview('${hEsc(flowKey(x.candidate,x.company,x.position))}')">상세</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function flowShowInterview(key){
+  const d=salesDemo.interviews[key];
+  if(!d) return;
+
+  const steps=[
+    ['추천완료','AI 추천 및 후보자 검토 완료'],
+    ['후보자 수락','후보자 면접 참여 의사 확인'],
+    ['면접진행','면접 일정 및 면접 결과 관리'],
+    ['최종 결과','최종 합격/불합격 결정'],
+    ['채용완료','채용 확정 및 종료']
+  ];
+
+  let current=d.stage;
+  if(d.status==='채용완료') current=5;
+  else if(d.status==='최종합격') current=4;
+  else if(d.status==='결과대기') current=4;
+
+  const stepsHtml=steps.map((s,i)=>{
+    const n=i+1;
+    const cls=n<current?'done':n===current?'current':'';
+    let date='';
+    if(n===3) date=d.schedule||'일정 미등록';
+    if(n===4) date=d.result||'결과 입력 대기';
+    if(n===5) date=d.status==='채용완료'?'완료':'-';
+    return `<div class="progress-step ${cls}">
+      <div class="step-dot">${n}</div>
+      <div><div class="step-title">${s[0]}</div><div class="small">${date}</div></div>
+    </div>`;
+  }).join('');
+
+  let action='';
+  if(d.status==='면접등록'){
+    action=`<button class="btn primary" onclick="flowScheduleInterview('${hEsc(key)}')">면접 일정 등록</button>`;
+  }else if(d.status==='면접예정'){
+    action=`<button class="btn primary" onclick="flowOpenResult('${hEsc(key)}')">면접 결과 입력</button>`;
+  }else if(d.status==='결과대기'){
+    action=`<button class="btn primary" onclick="flowOpenResult('${hEsc(key)}')">최종 결과 입력</button>`;
+  }else if(d.status==='최종합격'){
+    action=`<button class="btn primary" onclick="flowCompleteHiring('${hEsc(key)}')">✓ 채용완료 처리</button>`;
+  }else if(d.status==='채용완료'){
+    action=`<button class="btn" onclick="alert('Demo 완료: Position → AI 추천 → 후보자 → 이력서 → 면접 → 결과 → 채용완료')">Demo 완료 보기</button>`;
+  }
+
+  document.getElementById('interviewDetailTitle').textContent=`${d.candidate} · 면접 진행사항`;
+  document.getElementById('interviewDetailSub').textContent=`${d.company} · ${d.position}`;
+
+  document.getElementById('interviewDetailBody').innerHTML=`
+    <div class="progress-summary">
+      <div class="progress-stat"><label>기업</label><strong>${hEsc(d.company)}</strong></div>
+      <div class="progress-stat"><label>Position</label><strong>${hEsc(d.position)}</strong></div>
+      <div class="progress-stat"><label>AI 적합도</label><strong>${hEsc(d.score)}</strong></div>
+      <div class="progress-stat"><label>현재 상태</label><strong>${hEsc(d.status)}</strong></div>
+    </div>
+
+    <div class="progress-line"><div class="progress-steps">${stepsHtml}</div></div>
+
+    <div class="progress-detail-box">
+      <h3>현재 진행사항</h3>
+      <div class="progress-detail-row"><span class="label">면접 일정</span><span>${hEsc(d.schedule||'미등록')}</span></div>
+      <div class="progress-detail-row"><span class="label">1차 면접</span><span>${hEsc(d.interview1||'미등록')}</span></div>
+      <div class="progress-detail-row"><span class="label">2차 면접</span><span>${hEsc(d.interview2||'미등록')}</span></div>
+      <div class="progress-detail-row"><span class="label">면접 결과</span><span>${hEsc(d.result||'입력 대기')}</span></div>
+      <div class="progress-detail-row"><span class="label">AI 추천 의견</span><span>${hEsc(d.note)}</span></div>
+    </div>
+
+    <div class="actions" style="justify-content:flex-end;margin-top:18px">
+      ${action}
+    </div>
+  `;
+  openModal('interviewDetailModal');
+}
+
+function flowScheduleInterview(key){
+  const d=salesDemo.interviews[key];
+  if(!d) return;
+  d.schedule='2026-08-12 14:00';
+  d.interview2='2026-08-12 14:00';
+  d.status='면접예정';
+  d.stage=3;
+  renderSalesInterviews();
+  flowShowInterview(key);
+  hToast('면접 일정이 등록되었습니다.');
+}
+
+function flowOpenResult(key){
+  const d=salesDemo.interviews[key];
+  if(!d) return;
+
+  document.getElementById('interviewResultModal')?.remove();
+  const modal=document.createElement('div');
+  modal.id='interviewResultModal';
+  modal.className='modal-backdrop show';
+  modal.innerHTML=`
+    <div class="modal" style="max-width:650px">
+      <div class="modal-head">
+        <div><b>면접 결과 입력</b><div class="small">${hEsc(d.candidate)} · ${hEsc(d.company)} ${hEsc(d.position)}</div></div>
+        <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>면접 결과 *</label>
+            <select id="demoInterviewResult">
+              <option value="최종합격">최종합격</option>
+              <option value="보류">보류</option>
+              <option value="불합격">불합격</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>면접일</label>
+            <input id="demoInterviewDate" type="date" value="2026-08-12">
+          </div>
+          <div class="field full">
+            <label>면접 평가 / 메모</label>
+            <textarea id="demoInterviewMemo" rows="5">기술 역량과 조직 적합도가 우수하며 Position 요구사항을 충족합니다. 최종 합격을 추천합니다.</textarea>
+          </div>
+        </div>
+        <div class="actions" style="justify-content:flex-end;margin-top:18px">
+          <button class="btn" onclick="this.closest('.modal-backdrop').remove()">취소</button>
+          <button class="btn primary" onclick="flowSaveResult('${hEsc(key)}')">결과 저장</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function flowSaveResult(key){
+  const d=salesDemo.interviews[key];
+  const result=document.getElementById('demoInterviewResult').value;
+  const memo=document.getElementById('demoInterviewMemo').value.trim();
+  const date=document.getElementById('demoInterviewDate').value;
+
+  d.result=result;
+  d.note=memo||d.note;
+  d.interview2=date+' 14:00';
+
+  const modal=document.getElementById('interviewResultModal');
+  if(modal) modal.remove();
+
+  if(result==='최종합격'){
+    d.status='최종합격';
+    d.stage=4;
+    hToast('면접 결과가 저장되었습니다. 최종합격 처리되었습니다.');
+  }else if(result==='보류'){
+    d.status='결과대기';
+    d.stage=4;
+    hToast('면접 결과가 저장되었습니다. 결과대기 상태입니다.');
+  }else{
+    d.status='불합격';
+    d.stage=4;
+    hToast('면접 결과가 저장되었습니다.');
+  }
+
+  renderSalesInterviews();
+  flowShowInterview(key);
+}
+
+function flowCompleteHiring(key){
+  const d=salesDemo.interviews[key];
+  if(!d) return;
+  if(!confirm(`${d.candidate} 후보자를 채용완료 처리하시겠습니까?`)) return;
+
+  d.status='채용완료';
+  d.stage=5;
+  d.result='최종합격 · 채용완료';
+  renderSalesInterviews();
+  flowShowInterview(key);
+  hToast('🎉 채용이 완료되었습니다. Demo 전체 흐름이 종료되었습니다.');
+}
+
+/* Position → AI 추천 단계에서 후보자 상세를 새 Demo 함수로 연결 */
+function showPositionRecommendations(id){
+  const p=hhPositions.find(x=>x.id===id);
+  if(!p) return;
+  salesDemo.selectedPosition=p;
+
+  const ranked=(typeof data!=='undefined'?data:[]).slice(0,5);
+  document.getElementById('positionRecommendationArea').innerHTML=`
+    <div class="position-detail card">
+      <div class="card-head">
+        <div><b>${hEsc(p.company)} · ${hEsc(p.name)}</b>
+        <div class="small">필수역량: ${hEsc(p.skills)} · ${hEsc(p.career)}</div></div>
+        <span class="badge blue">AI 추천 후보자 5명</span>
+      </div>
+      <div class="card-body">
+        <div class="notice">기업/Position 요구사항과 후보자 DB의 경력·기술·산업 경험을 AI가 비교하여 적합도순으로 추천합니다.</div>
+        <div style="margin-top:16px">
+          ${ranked.map((d,i)=>`
+            <div class="candidate" onclick="flowOpenCandidate('${hEsc(d[0])}',${p.id})">
+              <div>
+                <div class="name">${hEsc(d[0])} <span class="badge ${i<3?'green':'blue'}">${i+1}순위</span></div>
+                <div class="role">${hEsc(d[1])} · ${hEsc(d[2])}</div>
+                <div class="chips">${d[4].map(x=>`<span class="chip">${hEsc(x)}</span>`).join('')}</div>
+              </div>
+              <div>
+                <div class="score">${hEsc(d[3])}<small>AI 적합도</small></div>
+                <button class="btn" onclick="event.stopPropagation();flowOpenCandidate('${hEsc(d[0])}',${p.id})">상세</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('positionRecommendationArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* 메뉴 이동 시 면접 화면도 최신 상태로 표시 */
+const oldGoForSalesDemo=go;
+go=function(page){
+  oldGoForSalesDemo(page);
+  if(page==='interviews') renderSalesInterviews();
+};
+renderSalesInterviews();
+</script>
+
+</body>
+</html>
