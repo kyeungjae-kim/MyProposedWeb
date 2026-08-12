@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Talent Platform Prototype</title>
+<style>
+:root {
+  --bg: #f5f7fb;
+  --panel: #fff;
+  --line: #e7eaf0;
+  --text: #18212f;
+  --muted: #718096;
+  --primary: #3b5ccc;
+  --primary2: #eef1ff;
+  --success: #16845b;
+  --warning: #c47a12;
+  --danger: #c84b4b;
+  --shadow: 0 8px 28px rgba(31,41,55,.07);
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-width: 320px; font-family: Inter, "Noto Sans KR", Arial, sans-serif; background: var(--bg); color: var(--text); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+/* Layout Base */
+.app { display: flex; min-height: 100vh; position: relative; }
+.sidebar {
+  width: 238px;
+  background: #111827;
+  color: #fff;
+  padding: 22px 14px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+.logo { font-size: 20px; font-weight: 800; padding: 0 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.logo span { color: #91a6ff; }
+.menu-title { font-size: 11px; color: #94a3b8; padding: 14px 12px 7px; text-transform: uppercase; }
+.nav button { width: 100%; border: 0; background: transparent; color: #cbd5e1; text-align: left; padding: 11px 12px; border-radius: 99px; margin: 2px 0; display: flex; align-items: center; }
+.nav button:hover, .nav button.active { background: #202a44; color: #fff; }
+.nav .icon { display: inline-block; width: 23px; }
+.sidebar-bottom { border-top: 1px solid #273244; padding-top: 14px; margin-top: 20px; color: #94a3b8; font-size: 12px; }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 90;
+}
+.sidebar-overlay.show { display: block; }
+
+.main { margin-left: 238px; width: calc(100% - 238px); transition: margin-left 0.3s ease, width 0.3s ease; }
+.topbar {
+  height: 60px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.mobile-nav-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  padding: 4px 8px;
+  color: var(--text);
+}
+.breadcrumb { font-size: 14px; color: var(--muted); font-weight: 600; }
+.user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: #dce3ff; color: #3149a8; display: grid; place-items: center; font-weight: 700; }
+
+.content { padding: 20px; max-width: 1500px; margin: auto; }
+.page { display: none; }
+.page.active { display: block; }
+h1 { margin: 0 0 6px; font-size: 22px; }
+.sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+/* Grid Components */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid2 { display: grid; grid-template-columns: 1.35fr .9fr; gap: 18px; margin-top: 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); }
+.kpi { padding: 18px; }
+.kpi .label { font-size: 13px; color: var(--muted); }
+.kpi .num { font-size: 26px; font-weight: 800; margin: 6px 0; }
+.delta { font-size: 12px; color: var(--success); }
+
+.card-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.card-title { font-weight: 750; }
+.small { font-size: 12px; color: var(--muted); }
+.card-body { padding: 18px; }
+
+/* Responsive Table Container */
+.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.table th, .table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #edf0f4; font-size: 13px; }
+.table th { color: var(--muted); font-weight: 600; }
+
+.badge { display: inline-flex; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2f7; color: #566273; }
+.badge.green { background: #e7f7ef; color: #16845b; }
+.badge.blue { background: #eaf0ff; color: #3b5ccc; }
+.badge.orange { background: #fff4df; color: #a7650b; }
+
+.btn { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 14px; font-size: 13px; min-height: 40px; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.ghost { background: #f7f8fc; }
+.btn.ai { background: #111827; color: #fff; border-color: #111827; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.searchbox { display: flex; gap: 8px; margin-bottom: 16px; }
+.searchbox input { flex: 1; border: 1px solid #dce1ea; border-radius: 10px; padding: 10px 14px; background: #fff; outline: none; min-height: 42px; }
+.search-meta { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; }
+
+.candidate { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; background: #fff; }
+.name { font-weight: 750; font-size: 15px; }
+.role { font-size: 13px; color: var(--muted); margin: 4px 0 9px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: #f1f3f7; padding: 4px 8px; border-radius: 6px; font-size: 11px; color: #536072; }
+.score { font-size: 20px; font-weight: 800; color: var(--primary); text-align: right; }
+.score small { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
+
+.ai-panel { background: linear-gradient(180deg,#111827,#1d2841); color: #fff; border-radius: 13px; padding: 18px; }
+.ai-input { display: flex; gap: 8px; margin: 16px 0; }
+.ai-input input { flex: 1; border: 0; border-radius: 9px; padding: 10px; background: #fff; color: #111; min-height: 42px; }
+.ai-result { background: #26324d; border: 1px solid #37445f; border-radius: 10px; padding: 12px; margin-top: 9px; font-size: 13px; word-break: break-all; }
+
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.task { display: flex; gap: 12px; align-items: flex-start; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--primary); margin-top: 6px; flex: none; }
+.task b { font-size: 13px; }
+.task span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+
+.detail { display: grid; grid-template-columns: 1fr 300px; gap: 18px; }
+.profile-head { display: flex; gap: 16px; align-items: center; }
+.big-avatar { width: 60px; height: 60px; border-radius: 16px; background: #e6ebff; color: #3b5ccc; display: grid; place-items: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+.profile-meta h2 { margin: 0 0 4px; font-size: 18px; }
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+.info { background: #f7f8fb; border-radius: 99px; padding: 12px; }
+.info label { display: block; color: var(--muted); font-size: 11px; }
+.info strong { display: block; margin-top: 4px; font-size: 13px; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.58); display: none; align-items: center; justify-content: center; z-index: 150; padding: 16px; }
+.modal-backdrop.show { display: flex; }
+.modal { width: min(800px, 100%); max-height: 90vh; overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 20px 70px rgba(0,0,0,.22); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.modal-body { padding: 20px; }
+.modal-close { border: 0; background: #f2f4f8; border-radius: 8px; width: 34px; height: 34px; font-size: 16px; }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.field label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid #dce1ea; border-radius: 8px; padding: 10px; background: #fff; min-height: 42px; font-size: 14px; }
+.field.full { grid-column: 1 / -1; }
+
+.interview-item { background: #fff; border: 1px solid #e2e7ef; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.toast { position: fixed; right: 20px; bottom: 20px; background: #111827; color: #fff; padding: 12px 18px; border-radius: 9px; display: none; z-index: 200; font-size: 13px; }
+
+/* MEDIA QUERIES (Mobile Responsiveness) */
+@media (max-width: 900px) {
+  .grid4 { grid-template-columns: repeat(2, 1fr); }
+  .grid2, .detail { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; width: 100%; }
+  .mobile-nav-toggle { display: block; }
+  
+  .content { padding: 14px; }
+  .searchbox { flex-direction: column; }
+  .searchbox input, .searchbox button { width: 100%; }
+  
+  .form-grid { grid-template-columns: 1fr; }
+  .candidate { flex-direction: column; align-items: stretch; }
+  .score { text-align: left; margin-top: 8px; }
+  
+  .interview-item { flex-direction: column; align-items: flex-start; }
+  .interview-actions { width: 100%; display: flex; justify-content: flex-end; }
+  
+  .modal-backdrop { padding: 10px; align-items: flex-end; }
+  .modal { max-height: 88vh; border-radius: 16px 16px 0 0; }
+}
+
+@media (max-width: 480px) {
+  .grid4 { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <span>AI Talent Platform</span>
+    </div>
+    <div class="menu-title">업무관리</div>
+    <div class="nav">
+      <button class="active" data-page="dashboard">▣ <span class="icon"></span>Dashboard</button>
+      <button data-page="candidates">◉ <span class="icon"></span>후보자 DB</button>
+      <button data-page="companies">▤ <span class="icon"></span>기업 DB</button>
+      <button data-page="projects">◆ <span class="icon"></span>채용 Position</button>
+      <button data-page="interviews">◷ <span class="icon"></span>면접/추천 관리</button>
+      <button data-page="documents">□ <span class="icon"></span>문서관리</button>
+    </div>
+    <div class="menu-title">AI</div>
+    <div class="nav">
+      <button data-page="aisearch">✦ <span class="icon"></span>AI Search</button>
+      <button data-page="aiassistant">✧ <span class="icon"></span>AI Assistant</button>
+    </div>
+    <div class="menu-title">관리</div>
+    <div class="nav">
+      <button data-page="stats">▥ <span class="icon"></span>통계</button>
+      <button data-page="settings">⚙ <span class="icon"></span>관리자</button>
+    </div>
+    <div class="sidebar-bottom">Prototype v1.0<br>Synology NAS / PostgreSQL</div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="mobile-nav-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="breadcrumb" id="crumb">Dashboard</div>
+      </div>
+      <div class="user">
+        <span>김팀장</span>
+        <div class="avatar">김</div>
+      </div>
+    </header>
+
+    <section class="content">
+      <!-- DASHBOARD PAGE -->
+      <div id="dashboard" class="page active">
+        <h1>Dashboard</h1>
+        <div class="sub">오늘의 채용 업무와 AI 추천 현황을 한눈에 확인하세요.</div>
+        
+        <div class="grid4">
+          <div class="card kpi"><div class="label">진행중 Position</div><div class="num">12</div><div class="delta">▲ 3 이번 주</div></div>
+          <div class="card kpi"><div class="label">추천 대기 후보자</div><div class="num">34</div><div class="delta">▲ 8 신규</div></div>
+          <div class="card kpi"><div class="label">이번 주 면접</div><div class="num">8</div><div class="delta">2건 오늘</div></div>
+          <div class="card kpi"><div class="label">후보자 DB</div><div class="num">103,284</div><div class="delta">자동 분석 92%</div></div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">진행중 채용 Position</div>
+              <button class="btn" onclick="go('projects')">전체보기</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead><tr><th>기업</th><th>Position</th><th>담당</th><th>상태</th></tr></thead>
+                  <tbody>
+                    <tr><td>삼성전자</td><td>Backend Developer</td><td>김팀장</td><td><span class="badge blue">후보자 검색</span></td></tr>
+                    <tr><td>ABC금융</td><td>IT Project Manager</td><td>이과장</td><td><span class="badge orange">면접진행</span></td></tr>
+                    <tr><td>넥스트모빌리티</td><td>Data Engineer</td><td>김팀장</td><td><span class="badge green">추천완료</span></td></tr>
+                    <tr><td>코어솔루션</td><td>HR Director</td><td>박부장</td><td><span class="badge blue">후보자 검색</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-panel">
+            <h3>✦ AI Talent Assistant</h3>
+            <div style="color:#aeb9cc;font-size:12px">업무 데이터를 자연어로 검색하고 후보자를 추천합니다.</div>
+            <div class="ai-input">
+              <input id="dashAi" placeholder="예: 금융권 Java 10년 이상 찾아줘">
+              <button class="btn primary" onclick="runAi('dashAi','dashResult')">검색</button>
+            </div>
+            <div id="dashResult" class="ai-result">예시 질문을 입력하면 AI가 후보자와 근거를 보여줍니다.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:18px">
+          <div class="card-head"><div class="card-title">오늘의 업무</div><span class="small">2026.08.10</span></div>
+          <div class="card-body timeline">
+            <div class="task"><i class="dot"></i><div><b>삼성전자 Backend 후보자 3명 검토</b><span>마감 오늘 15:00 · 김팀장</span></div></div>
+            <div class="task"><i class="dot"></i><div><b>김철수 후보자 면접 결과 확인</b><span>ABC금융 · 오늘 16:30</span></div></div>
+            <div class="task"><i class="dot"></i><div><b>신규 이력서 18건 AI 분석 완료</b><span>자동 분류 결과 확인 필요</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CANDIDATES PAGE -->
+      <div id="candidates" class="page">
+        <h1>후보자 DB</h1>
+        <div class="sub">103,284명의 후보자 정보를 검색하고 관리합니다.</div>
+        <div class="searchbox">
+          <input id="candidateSearch" value="금융권 Java 10년 이상 PM 경험" placeholder="이름, 회사, 기술 또는 자연어로 검색">
+          <button class="btn ai" onclick="candidateSearch()">✦ AI 검색</button>
+          <button class="btn primary">+ 후보자 등록</button>
+        </div>
+        <div class="search-meta">
+          <span class="small">AI 매칭 결과 <b style="color:#18212f">27명</b></span>
+          <select class="btn"><option>적합도순</option><option>최신등록순</option></select>
+        </div>
+        <div id="candidateList"></div>
+      </div>
+
+      <!-- AI SEARCH PAGE -->
+      <div id="aisearch" class="page">
+        <h1>AI Search</h1>
+        <div class="sub">후보자 조건을 문장으로 입력하면 AI가 DB와 이력서를 함께 분석합니다.</div>
+        <div class="card" style="padding:20px">
+          <div class="searchbox">
+            <input id="aiSearchInput" placeholder='예: "금융권에서 Java 10년 이상, PM 경험이 있는 서울 근무 가능자"'>
+            <button class="btn ai" onclick="runAISearch()">✦ AI 검색</button>
+          </div>
+          <div id="aiSearchResult" class="empty">검색 조건을 입력해 주세요.</div>
+        </div>
+      </div>
+
+      <!-- AI ASSISTANT PAGE -->
+      <div id="aiassistant" class="page">
+        <h1>AI Assistant</h1>
+        <div class="sub">헤드헌터의 반복 업무를 AI가 지원합니다.</div>
+        <div class="detail">
+          <div class="card">
+            <div class="card-head"><div class="card-title">대화형 업무 지원</div></div>
+            <div class="card-body" id="chatArea">
+              <div class="ai-result" style="background:#f5f7fb;color:#18212f;border-color:#e4e8ef">
+                안녕하세요. 후보자 검색, 채용 Position 분석, 이력서 요약, 추천메일 작성 등을 도와드릴 수 있습니다.
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="searchbox">
+                <input id="chatInput" placeholder="예: 삼성전자 포지션에 적합한 후보자 3명 추천해줘">
+                <button class="btn ai" onclick="chat()">전송</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">빠른 업무</div></div>
+            <div class="card-body actions">
+              <button class="btn" onclick="quick('후보자 추천')">후보자 추천</button>
+              <button class="btn" onclick="quick('이력서 요약')">이력서 요약</button>
+              <button class="btn" onclick="quick('추천메일 작성')">추천메일 작성</button>
+              <button class="btn" onclick="quick('채용현황 요약')">채용현황 요약</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPANIES PAGE -->
+      <div id="companies" class="page">
+        <h1>기업 DB</h1>
+        <div class="sub">고객사, 담당자, 계약 및 채용 이력을 관리합니다.</div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">주요 고객사</div>
+            <button class="btn primary" onclick="openCompanyForm()">+ 기업 등록</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead><tr><th>기업명</th><th>담당자</th><th>연락처</th><th>진행 Position</th><th>계약상태</th></tr></thead>
+                <tbody id="companyTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS PAGE -->
+      <div id="projects" class="page">
+        <h1>채용 Position</h1>
+        <div class="sub">기업별 채용 의뢰, AI 후보자 추천, 면접 등록을 한 화면에서 관리합니다.</div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">진행 Position</div>
+            <button class="btn primary" onclick="openPositionForm()">+ Position 등록</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead><tr><th>기업</th><th>Position</th><th>경력</th><th>마감</th><th>후보자</th><th>진행상태</th></tr></thead>
+                <tbody id="positionTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERVIEWS PAGE -->
+      <div id="interviews" class="page">
+        <h1>면접 / 추천 관리</h1>
+        <div class="sub">추천 후보자와 면접 일정을 단계별로 관리합니다.</div>
+        <div id="interviewList"></div>
+      </div>
+
+      <!-- DOCUMENTS PAGE -->
+      <div id="documents" class="page">
+        <h1>문서관리</h1>
+        <div class="sub">이력서, 계약서, 포트폴리오를 NAS에 안전하게 저장합니다.</div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">최근 문서</div><button class="btn primary">+ 업로드</button></div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead><tr><th>파일명</th><th>분류</th><th>저장위치</th><th>AI 분석</th></tr></thead>
+                <tbody>
+                  <tr><td>김철수_이력서.pdf</td><td>이력서</td><td>NAS / Candidates</td><td><span class="badge green">완료</span></td></tr>
+                  <tr><td>ABC금융_채용계약서.pdf</td><td>계약서</td><td>NAS / Contracts</td><td><span class="badge green">완료</span></td></tr>
+                  <tr><td>박민수_Portfolio.pdf</td><td>포트폴리오</td><td>NAS / Candidates</td><td><span class="badge orange">분석중</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS PAGE -->
+      <div id="stats" class="page">
+        <h1>통계</h1>
+        <div class="sub">채용 성과와 후보자 DB 현황을 확인합니다.</div>
+        <div class="grid4">
+          <div class="card kpi"><div class="label">이번 달 추천</div><div class="num">86</div><div class="delta">▲ 14%</div></div>
+          <div class="card kpi"><div class="label">면접 전환율</div><div class="num">42%</div><div class="delta">▲ 5.2%p</div></div>
+          <div class="card kpi"><div class="label">채용 성공</div><div class="num">19</div><div class="delta">▲ 3건</div></div>
+          <div class="card kpi"><div class="label">AI 추천 적중률</div><div class="num">91%</div><div class="delta">최근 30일</div></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="settings" class="page">
+        <h1>관리자</h1>
+        <div class="sub">사용자 권한, NAS 상태, AI 설정을 관리합니다.</div>
+        <div class="card">
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info"><label>NAS 저장공간</label><strong>1.2TB / 4TB</strong></div>
+              <div class="info"><label>DB 상태</label><strong style="color:#16845b">정상</strong></div>
+              <div class="info"><label>마지막 백업</label><strong>오늘 03:00</strong></div>
+              <div class="info"><label>AI 모델</label><strong>Qwen / API</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODALS -->
+<div id="companyModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head"><b>기업 등록</b><button class="modal-close" onclick="closeModal('companyModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>기업명 *</label><input id="newCompanyName"></div>
+        <div class="field"><label>업종</label><input id="newCompanyIndustry"></div>
+        <div class="field"><label>담당자 *</label><input id="newCompanyContact"></div>
+        <div class="field"><label>연락처</label><input id="newCompanyPhone"></div>
+        <div class="field full"><label>메모</label><textarea id="newCompanyMemo" rows="3"></textarea></div>
+      </div>
+      <div class="actions" style="justify-content:flex-end;margin-top:18px">
+        <button class="btn" onclick="closeModal('companyModal')">취소</button>
+        <button class="btn primary" onclick="saveCompany()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="positionModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head"><b>채용 Position 신규 등록</b><button class="modal-close" onclick="closeModal('positionModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>기업 *</label><select id="newPositionCompany"></select></div>
+        <div class="field"><label>Position *</label><input id="newPositionName"></div>
+        <div class="field"><label>경력조건</label><input id="newPositionCareer" value="5~10년"></div>
+        <div class="field"><label>채용인원</label><input id="newPositionCount" value="1명"></div>
+        <div class="field"><label>마감일</label><input id="newPositionDeadline" type="date" value="2026-08-31"></div>
+        <div class="field"><label>담당 헤드헌터</label><input id="newPositionManager" value="김팀장"></div>
+        <div class="field full"><label>필수 기술 / 역량</label><input id="newPositionSkills" value="Java, Spring Boot, PostgreSQL, AWS"></div>
+        <div class="field full"><label>채용 요구사항</label><textarea id="newPositionDesc" rows="3">대규모 서비스 백엔드 개발 경험자.</textarea></div>
+      </div>
+      <div class="actions" style="justify-content:flex-end;margin-top:18px">
+        <button class="btn" onclick="closeModal('positionModal')">취소</button>
+        <button class="btn primary" onclick="savePosition()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="interviewDetailModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <b id="interviewDetailTitle">면접 진행사항</b>
+        <div class="small" id="interviewDetailSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('interviewDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="interviewDetailBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// Mobile Navigation Controls
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// Data Mocking
+const data = [
+  ['김철수','Senior Java Developer','○○금융 · 12년','95%',['Java','Spring','금융권','PM']],
+  ['이영희','Backend Engineer','△△은행 · 10년','91%',['Java','Spring','금융권','AWS']],
+  ['박민수','Tech Lead','ABC시스템 · 11년','87%',['Java','AWS','PM','Cloud']],
+  ['최지훈','Software Architect','○○카드 · 13년','84%',['Java','Architecture','금융권']],
+  ['정하늘','Project Manager','△△IT · 9년','82%',['PM','금융권','Agile']]
+];
+
+const hhCompanies = [
+  {id:1, name:'삼성전자', contact:'홍길동', phone:'02-1111-1111', positions:4, status:'계약중'},
+  {id:2, name:'ABC금융', contact:'김상무', phone:'02-2222-2222', positions:2, status:'계약중'},
+  {id:3, name:'넥스트모빌리티', contact:'이정민', phone:'02-3333-3333', positions:3, status:'진행중'}
+];
+
+const hhPositions = [
+  {id:1, company:'삼성전자', name:'Backend Developer', career:'5~10년', deadline:'2026-08-20', count:'2명', skills:'Java, Spring Boot, PostgreSQL, AWS', status:'검색중'},
+  {id:2, company:'ABC금융', name:'IT Project Manager', career:'7~12년', deadline:'2026-08-18', count:'1명', skills:'PM, 금융권, Agile, IT', status:'면접'},
+  {id:3, company:'넥스트모빌리티', name:'Data Engineer', career:'5~10년', deadline:'2026-08-25', count:'2명', skills:'Python, AWS, Data', status:'추천완료'}
+];
+
+let hhInterviews = [
+  {candidate:'김철수', company:'삼성전자', position:'Backend Developer', date:'2026-08-12', status:'면접예정'}
+];
+
+function hEsc(v) { return String(v??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function hToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none', 2200); }
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// Navigation Routing
+function go(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  const label = document.querySelector(`[data-page="${page}"]`)?.textContent.trim()||page;
+  document.getElementById('crumb').textContent = label;
+  closeSidebar();
+  if(page==='candidates') renderCandidates();
+  if(page==='companies') renderCompanies();
+  if(page==='projects') renderPositions();
+  if(page==='interviews') renderInterviews();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click', ()=>go(b.dataset.page)));
+
+// Dynamic Renderers
+function renderCandidates() {
+  document.getElementById('candidateList').innerHTML = data.map(d=>`
+    <div class="candidate" onclick="showCandidate('${d[0]}')">
+      <div>
+        <div class="name">${d[0]}</div>
+        <div class="role">${d[1]} · ${d[2]}</div>
+        <div class="chips">${d[4].map(x=>`<span class="chip">${x}</span>`).join('')}</div>
+      </div>
+      <div>
+        <div class="score">${d[3]}<small>AI 적합도</small></div>
+        <button class="btn" style="margin-top:8px" onclick="event.stopPropagation();showCandidate('${d[0]}')">상세</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCandidate(name) {
+  const d = data.find(x=>x[0]===name);
+  document.getElementById('candidateList').innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <button class="btn" onclick="renderCandidates()">← 목록</button>
+        <div class="actions"><button class="btn">이력서</button><button class="btn primary">추천메일 작성</button></div>
+      </div>
+      <div class="card-body">
+        <div class="profile-head">
+          <div class="big-avatar">${name[0]}</div>
+          <div class="profile-meta"><h2>${d[0]}</h2><p>${d[1]} · ${d[2]}</p></div>
+        </div>
+        <div class="info-grid">
+          <div class="info"><label>AI 적합도</label><strong style="color:#3b5ccc">${d[3]}</strong></div>
+          <div class="info"><label>경력</label><strong>12년</strong></div>
+          <div class="info"><label>희망연봉</label><strong>9,000만원</strong></div>
+          <div class="info"><label>근무지</label><strong>서울</strong></div>
+        </div>
+        <h3 style="margin-top:20px">AI 분석</h3>
+        <p style="font-size:13px;line-height:1.6">금융권 경력과 Java/Spring 기술 역량이 채용 Position과 높은 수준으로 일치합니다.</p>
+      </div>
+    </div>`;
+}
+
+function renderCompanies() {
+  document.getElementById('companyTableBody').innerHTML = hhCompanies.map(c=>`
+    <tr>
+      <td><b>${hEsc(c.name)}</b></td>
+      <td>${hEsc(c.contact)}</td>
+      <td>${hEsc(c.phone)}</td>
+      <td>${c.positions}건</td>
+      <td><span class="badge ${c.status==='계약중'?'green':'blue'}">${hEsc(c.status)}</span></td>
+    </tr>
+  `).join('');
+}
+
+function openCompanyForm() {
+  ['newCompanyName','newCompanyIndustry','newCompanyContact','newCompanyPhone','newCompanyMemo'].forEach(id=>document.getElementById(id).value='');
+  openModal('companyModal');
+}
+
+function saveCompany() {
+  const name = document.getElementById('newCompanyName').value.trim();
+  const contact = document.getElementById('newCompanyContact').value.trim();
+  if(!name || !contact) { alert('기업명과 담당자는 필수입니다.'); return; }
+  hhCompanies.push({id:Date.now(), name, contact, phone:document.getElementById('newCompanyPhone').value.trim()||'-', positions:0, status:'신규'});
+  closeModal('companyModal');
+  renderCompanies();
+  hToast(`"${name}" 기업이 등록되었습니다.`);
+}
+
+function openPositionForm() {
+  document.getElementById('newPositionCompany').innerHTML = hhCompanies.map(c=>`<option>${hEsc(c.name)}</option>`).join('');
+  openModal('positionModal');
+}
+
+function savePosition() {
+  const company = document.getElementById('newPositionCompany').value;
+  const name = document.getElementById('newPositionName').value.trim();
+  if(!company || !name) { alert('기업과 Position은 필수입니다.'); return; }
+  hhPositions.push({
+    id: Date.now(),
+    company,
+    name,
+    career: document.getElementById('newPositionCareer').value,
+    deadline: document.getElementById('newPositionDeadline').value,
+    count: document.getElementById('newPositionCount').value,
+    skills: document.getElementById('newPositionSkills').value,
+    status: '검색중'
+  });
+  closeModal('positionModal');
+  renderPositions();
+  hToast(`"${name}" 포지션이 등록되었습니다.`);
+}
+
+function renderPositions() {
+  document.getElementById('positionTableBody').innerHTML = hhPositions.map(p=>`
+    <tr>
+      <td><b>${hEsc(p.company)}</b></td>
+      <td>${hEsc(p.name)}</td>
+      <td>${hEsc(p.career)}</td>
+      <td>${hEsc(p.deadline)}</td>
+      <td>${hEsc(p.count)}</td>
+      <td><span class="badge blue">${hEsc(p.status)}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderInterviews() {
+  document.getElementById('interviewList').innerHTML = hhInterviews.map(i=>`
+    <div class="interview-item">
+      <div>
+        <div class="name" style="font-size:16px">${hEsc(i.candidate)} 후보자 (${hEsc(i.company)})</div>
+        <div class="role" style="margin-bottom:0">${hEsc(i.position)} · ${hEsc(i.date)}</div>
+      </div>
+      <div class="interview-actions">
+        <span class="badge orange" style="margin-right:8px">${hEsc(i.status)}</span>
+        <button class="btn" onclick="showInterviewDetail('${hEsc(i.candidate)}')">상세보기</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showInterviewDetail(candidateName) {
+  document.getElementById('interviewDetailTitle').textContent = candidateName + ' 후보자 면접 진행사항';
+  document.getElementById('interviewDetailSub').textContent = '삼성전자 - Backend Developer';
+  document.getElementById('interviewDetailBody').innerHTML = `
+    <div class="info-grid" style="margin-bottom:16px">
+      <div class="info"><label>현재 단계</label><strong>1차 실무 면접</strong></div>
+      <div class="info"><label>면접 일시</label><strong>2026-08-12 14:00</strong></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">AI 예상 적합도: <b>95%</b> (실무진 면접 결과 대기 중)</p>
+  `;
+  openModal('interviewDetailModal');
+}
+
+function candidateSearch() { renderCandidates(); alert('AI 매칭을 통해 27명의 적합 후보자를 추출했습니다.'); }
+function runAi(inputId, resultId) {
+  const v = document.getElementById(inputId).value.trim();
+  document.getElementById(resultId).innerHTML = v ? `<b>AI 분석 결과</b><br>조건에 맞는 후보자 <strong>27명</strong>을 찾았습니다.` : '검색 조건을 입력해 주세요.';
+}
+function runAISearch() {
+  const v = document.getElementById('aiSearchInput').value.trim();
+  document.getElementById('aiSearchResult').innerHTML = v ? `<b>AI 검색 완료:</b> 27명의 적합한 후보자가 있습니다.` : '검색 조건을 입력해 주세요.';
+}
+function chat() {
+  const input = document.getElementById('chatInput'), v = input.value.trim(); if(!v) return;
+  const area = document.getElementById('chatArea');
+  area.innerHTML += `<div style="margin:8px 0;padding:10px;background:#eef1ff;border-radius:8px;font-size:13px"><b>나:</b> ${v}</div>`;
+  area.innerHTML += `<div class="ai-result"><b>AI:</b> ${v} 조건에 알맞은 후보자 3명을 추천합니다.</div>`;
+  input.value = '';
+}
+function quick(t) { document.getElementById('chatInput').value = t + ' 요청해줘'; chat(); }
+
+// App Init
+window.addEventListener('DOMContentLoaded', () => {
+  renderCandidates();
+  renderCompanies();
+  renderPositions();
+  renderInterviews();
+});
+</script>
+</body>
+</html>
